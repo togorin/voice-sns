@@ -126,21 +126,6 @@ export default function ProfilePage() {
       setIsEditingUsername(false);
     }
   };
-
-  // パスワードを更新する処理
-  const handleUpdatePassword = async () => {
-    const newPassword = prompt("Please enter your new password (at least 6 characters):");
-    if (!newPassword || newPassword.length < 6) {
-      alert("Password must be at least 6 characters long.");
-      return;
-    }
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) {
-      alert('Error updating password: ' + error.message);
-    } else {
-      alert('Password updated successfully!');
-    }
-  };
   
   const handleFollow = async () => {
     if (!currentUser) return alert('Please log in to follow users.');
@@ -235,8 +220,7 @@ export default function ProfilePage() {
           <div className="mt-6 space-y-4">
             {loading ? <p className="text-gray-400">Loading...</p> : 
             currentUser?.id === userId ? 
-              // 自分のプロフィールの場合はパスワード変更ボタンを表示
-              <button onClick={handleUpdatePassword} className="rounded-md bg-gray-600 px-6 py-2 font-semibold text-gray-100 hover:bg-gray-700">Update Password</button> : 
+              <p className="text-gray-400">This is your profile.</p> : 
             isFollowing ? <button onClick={handleUnfollow} className="rounded-md bg-gray-600 px-6 py-2 font-semibold text-gray-100 hover:bg-gray-700">Unfollow</button> : 
             <button onClick={handleFollow} className="rounded-md bg-blue-500 px-6 py-2 font-semibold text-white hover:bg-blue-600">Follow</button>}
           </div>
