@@ -46,7 +46,9 @@ export default function AuthPage() {
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center">
           {/* font-parkinsansをfont-unboundedに変更し、太さを調整 */}
-          <h1 className="font-unbounded text-7xl font-bold text-white">stew</h1>
+          <h1 className="font-unbounded w-1/3 text-center text-3xl font-bold text-white">
+          stew</h1>
+
         </div>
         <div className="rounded-lg bg-gray-800 p-6 shadow-lg">
           <div className="space-y-4">
