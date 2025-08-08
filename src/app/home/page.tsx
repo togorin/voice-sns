@@ -38,50 +38,27 @@ export default function HomePage() {
   useEffect(() => {
     const fetchInitialData = async () => {
       setLoading(true);
+      // ログイン状態は確認しますが、データ取得には影響させません
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUser(user);
-      if (!user) {
-        setLoading(false);
-        return;
-      }
       
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       
-      const { data, error } = await supabase.from('posts').select(`*, profiles (username, avatar_url), likes (*)`).gte('created_at', twentyFourHoursAgo).order('created_at', { ascending: false });
+      // フォロー関係での絞り込みを削除し、全ユーザーの投稿を取得します
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`*, profiles (username, avatar_url), likes (*)`)
+        .gte('created_at', twentyFourHoursAgo)
+        .order('created_at', { ascending: false });
       
-      if (!error) setPosts(data as Post[]);
+      if (error) {
+        console.error('Error fetching posts:', error);
+      } else {
+        setPosts(data as Post[]);
+      }
       setLoading(false);
     };
-
     fetchInitialData();
-
-    // --- リアルタイム更新のコード ---
-    const channel = supabase
-      .channel('realtime posts')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'posts' },
-        (payload) => {
-          const fetchNewPost = async () => {
-            const { data } = await supabase.from('posts').select(`*, profiles (username, avatar_url), likes (*)`).eq('id', payload.new.id).single();
-            if (data) setPosts((currentPosts) => [data as Post, ...currentPosts]);
-          };
-          fetchNewPost();
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'posts' },
-        (payload) => {
-          setPosts((currentPosts) => currentPosts.filter(post => post.id !== payload.old.id));
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-
   }, []);
 
   const handleLike = async (postId: string) => {
@@ -96,16 +73,12 @@ export default function HomePage() {
     await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', currentUser.id);
   };
 
-  // handleDelete関数を修正
   const handleDelete = async (post: Post) => {
     if (!currentUser || currentUser.id !== post.user_id) return;
     if (!confirm('Are you sure you want to delete this post?')) return;
     
-    // まず、自分の画面から投稿を即座に削除します
-    setPosts((currentPosts) => currentPosts.filter(p => p.id !== post.id));
+    setPosts(posts.filter(p => p.id !== post.id));
 
-    // その後、バックグラウンドでデータベースとストレージから削除します
-    // この操作がリアルタイム通知をトリガーし、他のユーザーの画面を更新します
     const filePath = new URL(post.audio_url).pathname.split('/voice-memos/')[1];
     await supabase.storage.from('voice-memos').remove([filePath]);
     await supabase.from('posts').delete().eq('id', post.id);
@@ -130,7 +103,7 @@ export default function HomePage() {
       </header>
       <div className="p-4">
         {loading ? <p className="text-center text-gray-400">Loading posts...</p> : 
-        posts.length === 0 ? <p className="text-center text-gray-400">No posts to show. Follow some users to see their posts here!</p> : 
+        posts.length === 0 ? <p className="text-center text-gray-400">No posts to show. Start by recording your first voice memo!</p> : 
         <div className="mx-auto max-w-md space-y-6">
           {posts.map((post) => {
             const userHasLiked = currentUser ? post.likes.some(like => like.user_id === currentUser.id) : false;
