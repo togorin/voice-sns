@@ -6,11 +6,11 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
-// 型定義を更新
+// 型定義
 type Profile = {
   username: string;
   avatar_url: string | null;
-  bio: string | null; // bioを追加
+  bio: string | null;
 };
 
 type Post = {
@@ -29,9 +29,12 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   
-  // 自己紹介編集用のstate
+  // 編集用のstate
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [bioText, setBioText] = useState('');
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [usernameText, setUsernameText] = useState('');
+
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -40,18 +43,17 @@ export default function ProfilePage() {
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUser(user);
 
-      // プロフィール情報を取得
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('username, avatar_url, bio') // bioも取得
+        .select('username, avatar_url, bio')
         .eq('id', userId)
         .single();
       if (profileData) {
         setProfile(profileData);
         setBioText(profileData.bio || '');
+        setUsernameText(profileData.username || '');
       }
 
-      // 投稿一覧を取得
       const { data: postData } = await supabase
         .from('posts')
         .select('id, created_at, audio_url')
@@ -59,7 +61,6 @@ export default function ProfilePage() {
         .order('created_at', { ascending: false });
       if (postData) setPosts(postData);
 
-      // フォロー状態を確認
       if (user) {
         const { data: followData } = await supabase
           .from('follows')
@@ -96,7 +97,6 @@ export default function ProfilePage() {
     }
   };
 
-  // 自己紹介を保存する処理
   const handleSaveBio = async () => {
     if (!currentUser) return;
     const { error } = await supabase
@@ -107,9 +107,24 @@ export default function ProfilePage() {
     if (error) {
       alert('Error updating bio.');
     } else {
-      // プロフィール情報を更新し、編集モードを終了
       setProfile(prev => prev ? { ...prev, bio: bioText } : null);
       setIsEditingBio(false);
+    }
+  };
+
+  // ユーザー名を保存する処理
+  const handleSaveUsername = async () => {
+    if (!currentUser || !usernameText) return;
+    const { error } = await supabase
+      .from('profiles')
+      .update({ username: usernameText })
+      .eq('id', currentUser.id);
+    
+    if (error) {
+      alert('Error updating username. It might already be taken.');
+    } else {
+      setProfile(prev => prev ? { ...prev, username: usernameText } : null);
+      setIsEditingUsername(false);
     }
   };
   
@@ -140,12 +155,35 @@ export default function ProfilePage() {
               </label>
             )}
           </div>
-          <h1 className="text-2xl font-bold text-white">{profile?.username || 'User'}</h1>
           
+          {/* ユーザー名の表示・編集エリア */}
+          <div className="flex items-center justify-center gap-2">
+            {isEditingUsername ? (
+              <input 
+                type="text"
+                value={usernameText}
+                onChange={(e) => setUsernameText(e.target.value)}
+                className="rounded-md border border-gray-600 bg-gray-700 p-1 text-center text-2xl font-bold text-white"
+              />
+            ) : (
+              <h1 className="text-2xl font-bold text-white">{profile?.username || 'User'}</h1>
+            )}
+            {currentUser?.id === userId && !isEditingUsername && (
+              <button onClick={() => setIsEditingUsername(true)} className="text-blue-400 hover:underline">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg>
+              </button>
+            )}
+          </div>
+          {isEditingUsername && (
+            <div className="mt-2 flex justify-center gap-2">
+              <button onClick={() => setIsEditingUsername(false)} className="rounded-md bg-gray-600 px-3 py-1 text-sm text-white">Cancel</button>
+              <button onClick={handleSaveUsername} className="rounded-md bg-green-600 px-3 py-1 text-sm text-white">Save</button>
+            </div>
+          )}
+
           {/* 自己紹介の表示・編集エリア */}
           <div className="mt-4 min-h-[6rem]">
             {currentUser?.id === userId && isEditingBio ? (
-              // 編集モード
               <div className="space-y-2">
                 <textarea
                   value={bioText}
@@ -160,7 +198,6 @@ export default function ProfilePage() {
                 </div>
               </div>
             ) : (
-              // 表示モード
               <p className="text-gray-400">
                 {profile?.bio || (currentUser?.id === userId ? 'Click to add a bio' : '')}
               </p>
@@ -174,7 +211,7 @@ export default function ProfilePage() {
 
           <div className="mt-6">
             {loading ? <p className="text-gray-400">Loading...</p> : 
-            currentUser?.id === userId ? null : // 自分のプロフィールの場合はフォローボタンを非表示
+            currentUser?.id === userId ? null : 
             isFollowing ? <button onClick={handleUnfollow} className="rounded-md bg-gray-600 px-6 py-2 font-semibold text-gray-100 hover:bg-gray-700">Unfollow</button> : 
             <button onClick={handleFollow} className="rounded-md bg-blue-500 px-6 py-2 font-semibold text-white hover:bg-blue-600">Follow</button>}
           </div>
