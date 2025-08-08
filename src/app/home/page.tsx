@@ -58,7 +58,7 @@ export default function HomePage() {
   // ログインしていないユーザーがインタラクティブな操作をしようとしたときの処理
   const handleProtectedAction = () => {
     if (!currentUser) {
-      alert('サインアップ or ログインしてください');
+      alert('Sign in or create an account to share & like!');
       router.push('/');
       return false;
     }
