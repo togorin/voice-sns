@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
 // 型定義
@@ -22,6 +22,7 @@ type Post = {
 export default function ProfilePage() {
   const params = useParams();
   const userId = params.userId as string;
+  const router = useRouter();
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -54,10 +55,14 @@ export default function ProfilePage() {
         setUsernameText(profileData.username || '');
       }
 
+      // 24時間前の時刻を計算
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
       const { data: postData } = await supabase
         .from('posts')
         .select('id, created_at, audio_url')
         .eq('user_id', userId)
+        .gte('created_at', twentyFourHoursAgo) // 24時間以内の投稿のみ取得
         .order('created_at', { ascending: false });
       if (postData) setPosts(postData);
 
@@ -127,16 +132,25 @@ export default function ProfilePage() {
     }
   };
   
+  const handleProtectedAction = () => {
+    if (!currentUser) {
+      alert('サインアップ or ログインしてください');
+      router.push('/');
+      return false;
+    }
+    return true;
+  };
+
   const handleFollow = async () => {
-    if (!currentUser) return alert('Please log in to follow users.');
-    const { error } = await supabase.from('follows').insert({ follower_id: currentUser.id, following_id: userId });
+    if (!handleProtectedAction()) return;
+    const { error } = await supabase.from('follows').insert({ follower_id: currentUser!.id, following_id: userId });
     if (error) console.error('Error following user:', error);
     else setIsFollowing(true);
   };
   
   const handleUnfollow = async () => {
-    if (!currentUser) return;
-    const { error } = await supabase.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', userId);
+    if (!handleProtectedAction()) return;
+    const { error } = await supabase.from('follows').delete().eq('follower_id', currentUser!.id).eq('following_id', userId);
     if (error) console.error('Error unfollowing user:', error);
     else setIsFollowing(false);
   };
@@ -220,7 +234,7 @@ export default function ProfilePage() {
           <div className="mt-6">
             {loading ? <p className="text-gray-400">Loading...</p> : 
             currentUser?.id === userId ? 
-              null : // 自分のプロフィールの場合は何も表示しない
+              null : 
             isFollowing ? <button onClick={handleUnfollow} className="rounded-md bg-gray-600 px-6 py-2 font-semibold text-gray-100 hover:bg-gray-700">Unfollow</button> : 
             <button onClick={handleFollow} className="rounded-md bg-blue-500 px-6 py-2 font-semibold text-white hover:bg-blue-600">Follow</button>}
           </div>
