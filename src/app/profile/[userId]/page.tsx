@@ -217,10 +217,10 @@ export default function ProfilePage() {
             )}
           </div>
 
-          <div className="mt-6 space-y-4">
+          <div className="mt-6">
             {loading ? <p className="text-gray-400">Loading...</p> : 
             currentUser?.id === userId ? 
-              <p className="text-gray-400">This is your profile.</p> : 
+              null : // 自分のプロフィールの場合は何も表示しない
             isFollowing ? <button onClick={handleUnfollow} className="rounded-md bg-gray-600 px-6 py-2 font-semibold text-gray-100 hover:bg-gray-700">Unfollow</button> : 
             <button onClick={handleFollow} className="rounded-md bg-blue-500 px-6 py-2 font-semibold text-white hover:bg-blue-600">Follow</button>}
           </div>
