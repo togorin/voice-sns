@@ -58,7 +58,7 @@ export default function HomePage() {
   // ログインしていないユーザーがインタラクティブな操作をしようとしたときの処理
   const handleProtectedAction = () => {
     if (!currentUser) {
-      alert('Sign in or create an account to share & like!');
+      alert('Sign in or create an account to share & like! ポストやいいねをするにはアカウント作成 or ログインしてください');
       router.push('/');
       return false;
     }
