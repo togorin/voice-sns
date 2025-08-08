@@ -14,26 +14,44 @@ export default function RecordPage() {
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const mimeTypeRef = useRef<string>(''); // 録音フォーマットを保持
 
   const handleStartRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      
+      // --- モバイル対応のための修正 ---
+      // ブラウザが対応している音声フォーマットを自動で選択
+      const supportedMimeTypes = ['audio/mp4', 'audio/webm'];
+      const supportedType = supportedMimeTypes.find(type => MediaRecorder.isTypeSupported(type));
+      
+      if (!supportedType) {
+        alert('Audio recording is not supported on your browser.');
+        return;
+      }
+      mimeTypeRef.current = supportedType;
+      // --- 修正ここまで ---
+
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: supportedType });
       mediaRecorderRef.current = mediaRecorder;
+      
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) audioChunksRef.current.push(event.data);
       };
+      
       mediaRecorder.onstop = () => {
-        const newAudioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const newAudioBlob = new Blob(audioChunksRef.current, { type: mimeTypeRef.current });
         setAudioBlob(newAudioBlob);
         setAudioUrl(URL.createObjectURL(newAudioBlob));
         audioChunksRef.current = [];
       };
+      
       mediaRecorder.start();
       setIsRecording(true);
       setAudioUrl(null);
       setAudioBlob(null);
     } catch (err) {
+      console.error('Error accessing microphone:', err);
       alert('Could not access the microphone. Please check permissions.');
     }
   };
@@ -53,7 +71,11 @@ export default function RecordPage() {
       setIsUploading(false);
       return;
     }
-    const fileName = `${user.id}/${Date.now()}.webm`;
+    
+    // ファイルの拡張子を動的に設定
+    const fileExt = mimeTypeRef.current.split('/')[1];
+    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
     const { error: uploadError } = await supabase.storage.from('voice-memos').upload(fileName, audioBlob);
     if (uploadError) {
       setIsUploading(false);
