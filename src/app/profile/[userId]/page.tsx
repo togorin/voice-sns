@@ -112,7 +112,6 @@ export default function ProfilePage() {
     }
   };
 
-  // ユーザー名を保存する処理
   const handleSaveUsername = async () => {
     if (!currentUser || !usernameText) return;
     const { error } = await supabase
@@ -127,9 +126,35 @@ export default function ProfilePage() {
       setIsEditingUsername(false);
     }
   };
+
+  // パスワードを更新する処理
+  const handleUpdatePassword = async () => {
+    const newPassword = prompt("Please enter your new password (at least 6 characters):");
+    if (!newPassword || newPassword.length < 6) {
+      alert("Password must be at least 6 characters long.");
+      return;
+    }
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      alert('Error updating password: ' + error.message);
+    } else {
+      alert('Password updated successfully!');
+    }
+  };
   
-  const handleFollow = async () => { /* ... */ };
-  const handleUnfollow = async () => { /* ... */ };
+  const handleFollow = async () => {
+    if (!currentUser) return alert('Please log in to follow users.');
+    const { error } = await supabase.from('follows').insert({ follower_id: currentUser.id, following_id: userId });
+    if (error) console.error('Error following user:', error);
+    else setIsFollowing(true);
+  };
+  
+  const handleUnfollow = async () => {
+    if (!currentUser) return;
+    const { error } = await supabase.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', userId);
+    if (error) console.error('Error unfollowing user:', error);
+    else setIsFollowing(false);
+  };
 
   return (
     <main className="min-h-screen bg-gray-900 p-4 pb-24">
@@ -156,7 +181,6 @@ export default function ProfilePage() {
             )}
           </div>
           
-          {/* ユーザー名の表示・編集エリア */}
           <div className="flex items-center justify-center gap-2">
             {isEditingUsername ? (
               <input 
@@ -181,7 +205,6 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* 自己紹介の表示・編集エリア */}
           <div className="mt-4 min-h-[6rem]">
             {currentUser?.id === userId && isEditingBio ? (
               <div className="space-y-2">
@@ -209,9 +232,11 @@ export default function ProfilePage() {
             )}
           </div>
 
-          <div className="mt-6">
+          <div className="mt-6 space-y-4">
             {loading ? <p className="text-gray-400">Loading...</p> : 
-            currentUser?.id === userId ? null : 
+            currentUser?.id === userId ? 
+              // 自分のプロフィールの場合はパスワード変更ボタンを表示
+              <button onClick={handleUpdatePassword} className="rounded-md bg-gray-600 px-6 py-2 font-semibold text-gray-100 hover:bg-gray-700">Update Password</button> : 
             isFollowing ? <button onClick={handleUnfollow} className="rounded-md bg-gray-600 px-6 py-2 font-semibold text-gray-100 hover:bg-gray-700">Unfollow</button> : 
             <button onClick={handleFollow} className="rounded-md bg-blue-500 px-6 py-2 font-semibold text-white hover:bg-blue-600">Follow</button>}
           </div>
