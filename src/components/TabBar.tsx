@@ -32,7 +32,7 @@ export default function TabBar() {
     if (currentUser) {
       router.push('/record');
     } else {
-      alert('Hop in — log in or sign up to post & like!');
+      alert('Hop in — log in or sign up to post & like! \n ポストやいいねをするにはログインしてね！');
     }
   };
 
