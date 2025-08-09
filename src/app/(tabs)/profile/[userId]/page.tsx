@@ -19,6 +19,35 @@ type Post = {
   audio_url: string;
 };
 
+// カウントダウン表示用のコンポーネント
+const Countdown = ({ createdAt }: { createdAt: string }) => {
+  const [timeLeft, setTimeLeft] = useState('');
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const expirationTime = new Date(createdAt).getTime() + 24 * 60 * 60 * 1000;
+      const now = new Date().getTime();
+      const difference = expirationTime - now;
+
+      if (difference > 0) {
+        const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((difference / 1000 / 60) % 60);
+        setTimeLeft(`${hours}h ${minutes}m left`);
+      } else {
+        setTimeLeft('Expired');
+      }
+    };
+
+    calculateTimeLeft();
+    const interval = setInterval(calculateTimeLeft, 60000); // 1分ごとに更新
+
+    return () => clearInterval(interval);
+  }, [createdAt]);
+
+  return <p className="mb-3 text-xs text-gray-500">{timeLeft}</p>;
+};
+
+
 export default function ProfilePage() {
   const params = useParams();
   const userId = params.userId as string;
@@ -29,7 +58,6 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   
-  // 編集用のstate
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [bioText, setBioText] = useState('');
   const [isEditingUsername, setIsEditingUsername] = useState(false);
@@ -54,10 +82,14 @@ export default function ProfilePage() {
         setUsernameText(profileData.username || '');
       }
 
+      // 24時間前の時刻を計算
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
       const { data: postData } = await supabase
         .from('posts')
         .select('id, created_at, audio_url')
         .eq('user_id', userId)
+        .gte('created_at', twentyFourHoursAgo) // 24時間以内の投稿のみ取得
         .order('created_at', { ascending: false });
       if (postData) setPosts(postData);
 
@@ -142,7 +174,6 @@ export default function ProfilePage() {
   };
 
   return (
-    // ヘッダーを削除し、代わりにmainにpadding-topを追加
     <main className="min-h-screen bg-gray-900 p-4 pt-8 pb-24">
       <div className="mx-auto max-w-md">
         {/* Profile Card */}
@@ -227,7 +258,8 @@ export default function ProfilePage() {
           <div className="space-y-6">
             {posts.length > 0 ? posts.map((post) => (
               <div key={post.id} className="rounded-lg bg-gray-800 p-5 shadow-lg">
-                <p className="mb-3 text-xs text-gray-500">{new Date(post.created_at).toLocaleString()}</p>
+                {/* カウントダウンコンポーネントを配置 */}
+                <Countdown createdAt={post.created_at} />
                 <audio src={post.audio_url} controls className="w-full" />
               </div>
             )) : <p className="text-center text-gray-400">No posts yet.</p>}
