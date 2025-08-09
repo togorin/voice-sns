@@ -75,20 +75,29 @@ export default function HomePage() {
     fetchInitialData();
   }, []);
 
+  // ログインしていないユーザーがインタラクティブな操作をしようとしたときの処理
+  const handleProtectedAction = () => {
+    if (!currentUser) {
+      alert('Hop in — log in or sign up to post & like!\nポストやいいねをするにはログインしてね！');
+      return false;
+    }
+    return true;
+  };
+
   const handleLike = async (postId: string) => {
-    if (!currentUser) return;
-    setPosts(posts.map(post => post.id === postId ? { ...post, likes: [...post.likes, { user_id: currentUser.id }] } : post));
-    await supabase.from('likes').insert({ post_id: postId, user_id: currentUser.id });
+    if (!handleProtectedAction()) return;
+    setPosts(posts.map(post => post.id === postId ? { ...post, likes: [...post.likes, { user_id: currentUser!.id }] } : post));
+    await supabase.from('likes').insert({ post_id: postId, user_id: currentUser!.id });
   };
 
   const handleUnlike = async (postId: string) => {
-    if (!currentUser) return;
-    setPosts(posts.map(post => post.id === postId ? { ...post, likes: post.likes.filter(like => like.user_id !== currentUser.id) } : post));
-    await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', currentUser.id);
+    if (!handleProtectedAction()) return;
+    setPosts(posts.map(post => post.id === postId ? { ...post, likes: post.likes.filter(like => like.user_id !== currentUser!.id) } : post));
+    await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', currentUser!.id);
   };
 
   const handleDelete = async (post: Post) => {
-    if (!currentUser || currentUser.id !== post.user_id) return;
+    if (!handleProtectedAction() || currentUser!.id !== post.user_id) return;
     if (!confirm('Are you sure you want to delete this post?')) return;
     
     setPosts(posts.filter(p => p.id !== post.id));
