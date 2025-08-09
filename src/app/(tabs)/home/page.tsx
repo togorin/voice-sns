@@ -107,7 +107,8 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-gray-900 pb-24">
-      <header className="sticky top-0 flex items-center justify-between border-b border-gray-700 bg-gray-800 p-4">
+      {/* z-10クラスを追加して、ヘッダーが常に最前面に表示されるようにします */}
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-700 bg-gray-800 p-4">
         <div className="w-1/3"></div>
         <h1 className="font-unbounded w-1/3 text-center text-3xl font-bold text-white">stew</h1>
         <div className="flex w-1/3 justify-end">
