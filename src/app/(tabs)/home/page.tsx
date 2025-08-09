@@ -111,7 +111,14 @@ export default function HomePage() {
         <div className="w-1/3"></div>
         <h1 className="font-unbounded w-1/3 text-center text-3xl font-bold text-white">stew</h1>
         <div className="flex w-1/3 justify-end">
-          <button onClick={handleLogout} className="rounded-md bg-gray-700 px-3 py-1 text-sm text-gray-200 hover:bg-gray-600">Logout</button>
+          {/* ちらつき防止のため、ローディング中はボタンのスペースだけ確保 */}
+          {loading ? (
+            <div className="h-[30px] w-[76px]"></div>
+          ) : currentUser ? (
+            <button onClick={handleLogout} className="rounded-md bg-gray-700 px-3 py-1 text-sm text-gray-200 hover:bg-gray-600">Logout</button>
+          ) : (
+            <Link href="/" className="rounded-md bg-[#D3FE3E] px-4 py-1.5 text-sm font-semibold text-black hover:bg-[#c2ef25]">Login</Link>
+          )}
         </div>
       </header>
       <div className="p-4">
@@ -162,9 +169,7 @@ export default function HomePage() {
           })}
         </div>}
       </div>
-      <Link href="/record" className="fixed bottom-6 right-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#5151EB] text-white shadow-lg transition-transform hover:scale-110">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-8 w-8"><path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 0 1 6 0v8.25a3 3 0 0 1-3 3Z" /></svg>
-      </Link>
+      {/* フローティングボタンを削除しました */}
     </main>
   );
 }
