@@ -5,7 +5,6 @@ import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
-import CustomAudioPlayer from '@/components/CustomAudioPlayer'; // この行が重要です
 
 // 型定義
 type Like = { user_id: string; };
@@ -39,7 +38,7 @@ const Countdown = ({ createdAt }: { createdAt: string }) => {
     };
 
     calculateTimeLeft();
-    const interval = setInterval(calculateTimeLeft, 60000); // 1分ごとに更新
+    const interval = setInterval(calculateTimeLeft, 60000);
 
     return () => clearInterval(interval);
   }, [createdAt]);
@@ -100,8 +99,11 @@ export default function HomePage() {
   };
 
   const handlePlay = (postId: string) => {
-    // This logic needs to be adapted for react-h5-audio-player
-    // For now, we'll leave it as is, since direct control is complex
+    audioRefs.current.forEach((audioEl, id) => {
+      if (id !== postId && audioEl) {
+        audioEl.pause();
+      }
+    });
   };
 
   return (
@@ -150,9 +152,15 @@ export default function HomePage() {
                   <p className="mb-3 text-white">{post.title}</p>
                 )}
 
-                <CustomAudioPlayer 
+                <audio 
                   src={post.audio_url} 
+                  controls 
+                  controlsList="nodownload" 
+                  ref={(el) => {
+                    audioRefs.current.set(post.id, el);
+                  }}
                   onPlay={() => handlePlay(post.id)}
+                  className="w-full" 
                 />
 
                 <div className="mt-4 flex items-center">

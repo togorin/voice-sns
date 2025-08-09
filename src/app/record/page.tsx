@@ -4,14 +4,13 @@ import { useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import CustomAudioPlayer from '@/components/CustomAudioPlayer'; // この行を追加
 
 export default function RecordPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [title, setTitle] = useState(''); // タイトル用のstate
+  const [title, setTitle] = useState('');
   const router = useRouter();
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -136,9 +135,10 @@ export default function RecordPage() {
               onChange={(e) => setTitle(e.target.value)}
               className="w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
             />
-            <CustomAudioPlayer 
+            <audio 
               src={audioUrl} 
-              onPlay={() => {}}
+              controls 
+              className="w-full" 
             />
             <button
               onClick={handlePost}
