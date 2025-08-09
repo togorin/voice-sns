@@ -107,7 +107,7 @@ export default function AuthPage() {
         </div>
         {/* ホーム画面への導線を追加 */}
         <div className="text-center">
-          {/* underline-offset-2 を追加してアンダーラインの位置を調整 */}
+          {/* underline-offset-6 を追加してアンダーラインの位置を調整 */}
           <Link href="/home" className="text-sm font-bold text-gray-400 underline underline-offset-2 hover:text-gray-200">
             or browse the timeline as a guest
           </Link>
