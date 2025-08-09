@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
+// CustomAudioPlayerのインポートを削除しました
 
 // 型定義を更新
 type Profile = {
@@ -91,7 +92,7 @@ export default function ProfilePage() {
         .from('posts')
         .select('id, created_at, audio_url, title')
         .eq('user_id', userId)
-        .gte('created_at', twentyFourHoursAgo) // この行を追加しました
+        .gte('created_at', twentyFourHoursAgo)
         .order('created_at', { ascending: false });
       if (postData) setPosts(postData);
 
@@ -261,11 +262,14 @@ export default function ProfilePage() {
             {posts.length > 0 ? posts.map((post) => (
               <div key={post.id} className="rounded-lg bg-gray-800 p-5 shadow-lg">
                 <Countdown createdAt={post.created_at} />
-                {/* もしタイトルがあれば、それを表示 */}
                 {post.title && (
                   <p className="mb-3 text-white">{post.title}</p>
                 )}
-                
+                <audio 
+                  src={post.audio_url} 
+                  controls 
+                  className="w-full" 
+                />
               </div>
             )) : <p className="text-center text-gray-400">No posts yet.</p>}
           </div>
