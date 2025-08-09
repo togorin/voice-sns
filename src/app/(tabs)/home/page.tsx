@@ -78,7 +78,7 @@ export default function HomePage() {
   const handleProtectedAction = () => {
     if (!currentUser) {
       alert('Hop in — log in or sign up to post & like!');
-      router.push('/');
+      // router.push('/'); // この行を削除しました
       return false;
     }
     return true;
