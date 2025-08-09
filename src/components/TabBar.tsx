@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import type { User } from '@supabase/supabase-js';
-import { usePathname } from 'next/navigation'; // 現在のURLを取得するためのフック
+import { usePathname, useRouter } from 'next/navigation';
 
-// アウトラインアイコン
+// 各アイコンのSVGコンポーネント
 const HomeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>;
 const RecordIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 0 1 6 0v8.25a3 3 0 0 1-3 3Z" /></svg>;
 const ProfileIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>;
@@ -17,7 +17,8 @@ const ProfileIconFilled = () => <svg xmlns="http://www.w3.org/2000/svg" classNam
 
 export default function TabBar() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const pathname = usePathname(); // 現在のページのパスを取得
+  const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     const getCurrentUser = async () => {
@@ -27,8 +28,16 @@ export default function TabBar() {
     getCurrentUser();
   }, []);
 
+  const handleRecordClick = () => {
+    if (currentUser) {
+      router.push('/record');
+    } else {
+      alert('Hop in — log in or sign up to post & like!');
+    }
+  };
+
   const isHomePage = pathname === '/home';
-  const isProfilePage = currentUser ? pathname === `/profile/${currentUser.id}` : false;
+  const isProfilePage = currentUser ? pathname.startsWith(`/profile/${currentUser.id}`) : false;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-10 border-t border-gray-700 bg-gray-800">
@@ -44,18 +53,18 @@ export default function TabBar() {
             {isProfilePage ? <ProfileIconFilled /> : <ProfileIcon />}
           </Link>
         ) : (
-          <Link href="/" className="text-gray-400 hover:text-white">
+          <button onClick={handleRecordClick} className="text-gray-400 hover:text-white">
             <ProfileIcon />
-          </Link>
+          </button>
         )}
       </div>
       
-      <Link 
-        href="/record" 
+      <button 
+        onClick={handleRecordClick}
         className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-[35%] flex h-20 w-20 items-center justify-center rounded-full bg-[#5151EB] text-white shadow-lg"
       >
         <RecordIcon />
-      </Link>
+      </button>
     </nav>
   );
 }
