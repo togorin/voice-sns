@@ -5,10 +5,9 @@ import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
-
 // CustomAudioPlayerのインポートを削除しました
 
-// 型定義を更新
+// 型定義
 type Profile = {
   username: string;
   avatar_url: string | null;
@@ -19,7 +18,7 @@ type Post = {
   id: string;
   created_at: string;
   audio_url: string;
-  title: string | null; // titleを追加
+  title: string | null;
 };
 
 // カウントダウン表示用のコンポーネント
@@ -84,16 +83,17 @@ export default function ProfilePage() {
         setUsernameText(profileData.username || '');
       }
 
-      // 24時間前の時刻を計算
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
-      // postsテーブルからtitleも取得し、24時間以内のものに絞り込む
-      const { data: postData } = await supabase
+      const postQuery = supabase
         .from('posts')
         .select('id, created_at, audio_url, title')
-        .eq('user_id', userId)
-        .gte('created_at', twentyFourHoursAgo)
-        .order('created_at', { ascending: false });
+        .eq('user_id', userId);
+
+      if (user?.id !== userId) {
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        postQuery.gte('created_at', twentyFourHoursAgo);
+      }
+      
+      const { data: postData } = await postQuery.order('created_at', { ascending: false });
       if (postData) setPosts(postData);
 
       if (user) {
@@ -162,6 +162,17 @@ export default function ProfilePage() {
     }
   };
   
+  const handleDelete = async (post: Post) => {
+    if (!currentUser || currentUser.id !== userId) return;
+    if (!confirm('Are you sure you want to delete this post?')) return;
+    
+    setPosts(posts.filter(p => p.id !== post.id));
+
+    const filePath = new URL(post.audio_url).pathname.split('/voice-memos/')[1];
+    await supabase.storage.from('voice-memos').remove([filePath]);
+    await supabase.from('posts').delete().eq('id', post.id);
+  };
+
   const handleFollow = async () => {
     if (!currentUser) return alert('Please log in to follow users.');
     const { error } = await supabase.from('follows').insert({ follower_id: currentUser.id, following_id: userId });
@@ -261,9 +272,16 @@ export default function ProfilePage() {
           <div className="space-y-6">
             {posts.length > 0 ? posts.map((post) => (
               <div key={post.id} className="rounded-lg bg-gray-800 p-5 shadow-lg">
-                <Countdown createdAt={post.created_at} />
+                <div className="flex items-center justify-between">
+                  <Countdown createdAt={post.created_at} />
+                  {currentUser?.id === userId && (
+                    <button onClick={() => handleDelete(post)} className="text-gray-500 hover:text-red-500">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" /></svg>
+                    </button>
+                  )}
+                </div>
                 {post.title && (
-                  <p className="mb-3 text-sm text-white">{post.title}</p>
+                  <p className="mb-3 text-white">{post.title}</p>
                 )}
                 <audio 
                   src={post.audio_url} 
