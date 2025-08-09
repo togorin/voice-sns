@@ -38,19 +38,18 @@ export default function HomePage() {
       
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       
-      let query = supabase.from('posts').select(`*, profiles (username, avatar_url), likes (*)`).gte('created_at', twentyFourHoursAgo);
-
-      // ログインしている場合のみ、フォローしているユーザーで絞り込む
-      if (user) {
-        const { data: followingData } = await supabase.from('follows').select('following_id').eq('follower_id', user.id);
-        const followingIds = followingData?.map(item => item.following_id) || [];
-        followingIds.push(user.id);
-        query = query.in('user_id', followingIds);
+      // フォロー関係の絞り込みを削除し、常に全ユーザーの投稿を取得します
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`*, profiles (username, avatar_url), likes (*)`)
+        .gte('created_at', twentyFourHoursAgo)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching posts:', error);
+      } else {
+        setPosts(data as Post[]);
       }
-      
-      const { data, error } = await query.order('created_at', { ascending: false });
-      
-      if (!error) setPosts(data as Post[]);
       setLoading(false);
     };
     fetchInitialData();
@@ -144,9 +143,7 @@ export default function HomePage() {
           })}
         </div>}
       </div>
-      <button onClick={() => { if (handleProtectedAction()) router.push('/record') }} className="fixed bottom-6 right-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#5151EB] text-white shadow-lg transition-transform hover:scale-110">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-8 w-8"><path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 0 1 6 0v8.25a3 3 0 0 1-3 3Z" /></svg>
-      </button>
+      {/* フローティングボタンを削除しました */}
     </main>
   );
 }
