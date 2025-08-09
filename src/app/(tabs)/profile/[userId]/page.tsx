@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
+
 // 型定義を更新
 type Profile = {
   username: string;
@@ -82,11 +83,15 @@ export default function ProfilePage() {
         setUsernameText(profileData.username || '');
       }
 
-      // postsテーブルからtitleも取得するように変更
+      // 24時間前の時刻を計算
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+      // postsテーブルからtitleも取得し、24時間以内のものに絞り込む
       const { data: postData } = await supabase
         .from('posts')
         .select('id, created_at, audio_url, title')
         .eq('user_id', userId)
+        .gte('created_at', twentyFourHoursAgo) // この行を追加しました
         .order('created_at', { ascending: false });
       if (postData) setPosts(postData);
 
