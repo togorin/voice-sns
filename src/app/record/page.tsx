@@ -4,7 +4,6 @@ import { useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-// CustomAudioPlayerのインポートを削除しました
 
 export default function RecordPage() {
   const [isRecording, setIsRecording] = useState(false);
@@ -37,7 +36,12 @@ export default function RecordPage() {
       }
       mimeTypeRef.current = supportedType;
 
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: supportedType });
+      const options = {
+        mimeType: supportedType,
+        audioBitsPerSecond: 128000,
+      };
+      const mediaRecorder = new MediaRecorder(stream, options);
+
       mediaRecorderRef.current = mediaRecorder;
       
       mediaRecorder.ondataavailable = (event) => {
@@ -106,6 +110,9 @@ export default function RecordPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-900 p-4">
+      <Link href="/home" className="absolute top-5 left-5 text-2xl font-bold text-white hover:text-gray-300">
+        &lt;
+      </Link>
       <div className="w-full max-w-md rounded-lg bg-gray-800 p-8 text-center shadow-lg">
         <h1 className="text-xl font-bold text-white">Post a Voice Memo</h1>
         <div className="my-8">
@@ -137,7 +144,6 @@ export default function RecordPage() {
               maxLength={20}
               className="w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
             />
-            {/* CustomAudioPlayerを標準のaudioタグに戻しました */}
             <audio 
               src={audioUrl} 
               controls 

@@ -75,20 +75,30 @@ export default function HomePage() {
     fetchInitialData();
   }, []);
 
+  // ログインしていないユーザーがインタラクティブな操作をしようとしたときの処理
+  const handleProtectedAction = () => {
+    if (!currentUser) {
+      // ポップアップの文言をタブバーと統一しました
+      alert('Hop in — log in or sign up to post & like!\nポストやいいねをするにはログインしてね！');
+      return false;
+    }
+    return true;
+  };
+
   const handleLike = async (postId: string) => {
-    if (!currentUser) return;
-    setPosts(posts.map(post => post.id === postId ? { ...post, likes: [...post.likes, { user_id: currentUser.id }] } : post));
-    await supabase.from('likes').insert({ post_id: postId, user_id: currentUser.id });
+    if (!handleProtectedAction()) return;
+    setPosts(posts.map(post => post.id === postId ? { ...post, likes: [...post.likes, { user_id: currentUser!.id }] } : post));
+    await supabase.from('likes').insert({ post_id: postId, user_id: currentUser!.id });
   };
 
   const handleUnlike = async (postId: string) => {
-    if (!currentUser) return;
-    setPosts(posts.map(post => post.id === postId ? { ...post, likes: post.likes.filter(like => like.user_id !== currentUser.id) } : post));
-    await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', currentUser.id);
+    if (!handleProtectedAction()) return;
+    setPosts(posts.map(post => post.id === postId ? { ...post, likes: post.likes.filter(like => like.user_id !== currentUser!.id) } : post));
+    await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', currentUser!.id);
   };
 
   const handleDelete = async (post: Post) => {
-    if (!currentUser || currentUser.id !== post.user_id) return;
+    if (!handleProtectedAction() || currentUser!.id !== post.user_id) return;
     if (!confirm('Are you sure you want to delete this post?')) return;
     
     setPosts(posts.filter(p => p.id !== post.id));
@@ -115,7 +125,7 @@ export default function HomePage() {
           {loading ? (
             <div className="h-[30px] w-[76px]"></div>
           ) : currentUser ? (
-            <button onClick={handleLogout} className="rounded-md bg-gray-700 px-4 py-1.5 text-sm font-semibold text-gray-200 hover:bg-gray-600">Logout</button>
+            <button onClick={handleLogout} className="rounded-md bg-gray-700 px-3 py-1 text-sm text-gray-200 hover:bg-gray-600">Logout</button>
           ) : (
             <Link href="/" className="rounded-md bg-[#D3FE3E] px-4 py-1.5 text-sm font-semibold text-black hover:bg-[#c2ef25]">Login</Link>
           )}
