@@ -14,14 +14,21 @@ export default function RecordPage() {
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const mimeTypeRef = useRef<string>(''); // 録音フォーマットを保持
+  const mimeTypeRef = useRef<string>('');
 
   const handleStartRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // --- ここを修正 ---
+      // マイクの自動調整機能をオフにする設定を追加
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          autoGainControl: false,
+          noiseSuppression: false,
+          echoCancellation: false,
+        }
+      });
+      // --- 修正ここまで ---
       
-      // --- モバイル対応のための修正 ---
-      // ブラウザが対応している音声フォーマットを自動で選択
       const supportedMimeTypes = ['audio/mp4', 'audio/webm'];
       const supportedType = supportedMimeTypes.find(type => MediaRecorder.isTypeSupported(type));
       
@@ -30,7 +37,6 @@ export default function RecordPage() {
         return;
       }
       mimeTypeRef.current = supportedType;
-      // --- 修正ここまで ---
 
       const mediaRecorder = new MediaRecorder(stream, { mimeType: supportedType });
       mediaRecorderRef.current = mediaRecorder;
@@ -72,7 +78,6 @@ export default function RecordPage() {
       return;
     }
     
-    // ファイルの拡張子を動的に設定
     const fileExt = mimeTypeRef.current.split('/')[1];
     const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
@@ -95,9 +100,6 @@ export default function RecordPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-900 p-4">
-      <Link href="/home" className="absolute top-4 left-4 text-blue-400 hover:underline">
-        &larr; Back to Timeline
-      </Link>
       <div className="w-full max-w-md rounded-lg bg-gray-800 p-8 text-center shadow-lg">
         <h1 className="text-2xl font-bold text-white">Post a Voice Memo</h1>
         <div className="my-8">
@@ -124,10 +126,10 @@ export default function RecordPage() {
             <audio src={audioUrl} controls className="w-full" />
             <button
               onClick={handlePost}
-              className="w-full rounded-md bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700 disabled:bg-gray-400"
+              className="w-full rounded-md bg-[#5151EB] px-4 py-3 font-semibold text-white hover:bg-[#4141d4] disabled:bg-gray-400"
               disabled={isUploading}
             >
-              {isUploading ? 'Uploading...' : 'Post this voice memo'}
+              {isUploading ? 'Uploading...' : 'Post'}
             </button>
           </div>
         )}
