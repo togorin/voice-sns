@@ -44,9 +44,8 @@ export default function AuthPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-900 p-4">
       <div className="w-full max-w-sm space-y-8">
-        <div className="text-center mb-8">
-  <h1 className="font-unbounded text-6xl font-bold text-white text-center">stew</h1>
-
+        <div className="text-center">
+          <h1 className="font-unbounded text-7xl font-bold text-white">stew</h1>
         </div>
         <div className="rounded-lg bg-gray-800 p-6 shadow-lg">
           <div className="space-y-4">
@@ -78,14 +77,14 @@ export default function AuthPage() {
             {isLoginView ? (
               <button
                 onClick={handleLogin}
-                className="w-full rounded-md bg-[#5151EB] px-4 py-2 font-semibold text-white hover:bg-[#4141d4]"
+                className="w-full rounded-md bg-[#D3FE3E] px-4 py-2 font-semibold text-black hover:bg-[#c2ef25]"
               >
                 Login
               </button>
             ) : (
               <button
                 onClick={handleSignUp}
-                className="w-full rounded-md bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700"
+                className="w-full rounded-md bg-[#D3FE3E] px-4 py-2 font-semibold text-black hover:bg-[#c2ef25]"
               >
                 Sign Up
               </button>
