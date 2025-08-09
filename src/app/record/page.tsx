@@ -10,6 +10,7 @@ export default function RecordPage() {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [title, setTitle] = useState(''); // タイトル用のstate
   const router = useRouter();
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -18,8 +19,6 @@ export default function RecordPage() {
 
   const handleStartRecording = async () => {
     try {
-      // --- ここを修正 ---
-      // マイクの自動調整機能をオフにする設定を追加
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           autoGainControl: false,
@@ -27,7 +26,6 @@ export default function RecordPage() {
           echoCancellation: false,
         }
       });
-      // --- 修正ここまで ---
       
       const supportedMimeTypes = ['audio/mp4', 'audio/webm'];
       const supportedType = supportedMimeTypes.find(type => MediaRecorder.isTypeSupported(type));
@@ -56,6 +54,7 @@ export default function RecordPage() {
       setIsRecording(true);
       setAudioUrl(null);
       setAudioBlob(null);
+      setTitle('');
     } catch (err) {
       console.error('Error accessing microphone:', err);
       alert('Could not access the microphone. Please check permissions.');
@@ -88,7 +87,13 @@ export default function RecordPage() {
       return;
     }
     const { data: urlData } = supabase.storage.from('voice-memos').getPublicUrl(fileName);
-    const { error: insertError } = await supabase.from('posts').insert({ user_id: user.id, audio_url: urlData.publicUrl });
+    
+    const { error: insertError } = await supabase.from('posts').insert({ 
+      user_id: user.id, 
+      audio_url: urlData.publicUrl,
+      title: title || null,
+    });
+
     setIsUploading(false);
     if (insertError) {
       alert('Error saving post: ' + insertError.message);
@@ -123,7 +128,17 @@ export default function RecordPage() {
         {audioUrl && (
           <div className="space-y-4">
             <p className="text-gray-300">Recording Complete!</p>
-            <audio src={audioUrl} controls className="w-full" />
+            <input
+              type="text"
+              placeholder="Add a title... (optional)"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            />
+            <CustomAudioPlayer 
+              src={audioUrl} 
+              onPlay={() => {}}
+            />
             <button
               onClick={handlePost}
               className="w-full rounded-md bg-[#5151EB] px-4 py-3 font-semibold text-white hover:bg-[#4141d4] disabled:bg-gray-400"
