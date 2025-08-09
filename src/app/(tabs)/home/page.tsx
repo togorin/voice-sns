@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
-import CustomAudioPlayer from '@/components/CustomAudioPlayer';
+import CustomAudioPlayer from '@/components/CustomAudioPlayer'; // この行が重要です
 
 // 型定義
 type Like = { user_id: string; };
@@ -100,12 +100,8 @@ export default function HomePage() {
   };
 
   const handlePlay = (postId: string) => {
-    audioRefs.current.forEach((audioEl, id) => {
-      if (id !== postId && audioEl) {
-        // react-h5-audio-player doesn't expose a pause method directly via ref
-        // This part needs adjustment if we use the custom player component
-      }
-    });
+    // This logic needs to be adapted for react-h5-audio-player
+    // For now, we'll leave it as is, since direct control is complex
   };
 
   return (
