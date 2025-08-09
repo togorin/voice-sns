@@ -7,44 +7,21 @@ import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
 // 型定義
-type Like = { user_id: string; };
+type Like = {
+  user_id: string;
+};
+
 type Post = {
   id: string;
   created_at: string;
   audio_url: string;
   user_id: string;
-  profiles: { username: string; avatar_url: string | null; } | null;
+  profiles: {
+    username: string;
+    avatar_url: string | null;
+  } | null;
   likes: Like[];
 };
-
-// カウントダウン表示用のコンポーネント
-const Countdown = ({ createdAt }: { createdAt: string }) => {
-  const [timeLeft, setTimeLeft] = useState('');
-
-  useEffect(() => {
-    const calculateTimeLeft = () => {
-      const expirationTime = new Date(createdAt).getTime() + 24 * 60 * 60 * 1000;
-      const now = new Date().getTime();
-      const difference = expirationTime - now;
-
-      if (difference > 0) {
-        const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
-        const minutes = Math.floor((difference / 1000 / 60) % 60);
-        setTimeLeft(`${hours}h ${minutes}m left`);
-      } else {
-        setTimeLeft('Expired');
-      }
-    };
-
-    calculateTimeLeft();
-    const interval = setInterval(calculateTimeLeft, 60000); // 1分ごとに更新
-
-    return () => clearInterval(interval);
-  }, [createdAt]);
-
-  return <p className="text-xs text-gray-500">{timeLeft}</p>;
-};
-
 
 export default function HomePage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -131,12 +108,11 @@ export default function HomePage() {
                       <Link href={`/profile/${post.user_id}`} className="hover:underline">
                         <p className="text-sm font-semibold text-gray-100">{post.profiles?.username || 'Unknown User'}</p>
                       </Link>
-                      {/* カウントダウンコンポーネントを配置 */}
-                      <Countdown createdAt={post.created_at} />
+                      <p className="text-xs text-gray-500">{new Date(post.created_at).toLocaleString()}</p>
                     </div>
                   </div>
                   {currentUser?.id === post.user_id && (
-                    <button onClick={() => handleDelete(post)} className="text-gray-500 hover:text-white"> {/* ホバー色を白に変更 */}
+                    <button onClick={() => handleDelete(post)} className="text-gray-500 hover:text-red-500">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" /></svg>
                     </button>
                   )}
@@ -162,9 +138,7 @@ export default function HomePage() {
           })}
         </div>}
       </div>
-      <Link href="/record" className="fixed bottom-6 right-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#5151EB] text-white shadow-lg transition-transform hover:scale-110">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-8 w-8"><path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 0 1 6 0v8.25a3 3 0 0 1-3 3Z" /></svg>
-      </Link>
+      {/* フローティングボタンを削除 */}
     </main>
   );
 }

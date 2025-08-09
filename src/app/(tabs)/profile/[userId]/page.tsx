@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
 // 型定義
@@ -22,7 +22,6 @@ type Post = {
 export default function ProfilePage() {
   const params = useParams();
   const userId = params.userId as string;
-  const router = useRouter();
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -55,14 +54,10 @@ export default function ProfilePage() {
         setUsernameText(profileData.username || '');
       }
 
-      // 24時間前の時刻を計算
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
       const { data: postData } = await supabase
         .from('posts')
         .select('id, created_at, audio_url')
         .eq('user_id', userId)
-        .gte('created_at', twentyFourHoursAgo) // 24時間以内の投稿のみ取得
         .order('created_at', { ascending: false });
       if (postData) setPosts(postData);
 
@@ -132,37 +127,23 @@ export default function ProfilePage() {
     }
   };
   
-  const handleProtectedAction = () => {
-    if (!currentUser) {
-      alert('サインアップ or ログインしてください');
-      router.push('/');
-      return false;
-    }
-    return true;
-  };
-
   const handleFollow = async () => {
-    if (!handleProtectedAction()) return;
-    const { error } = await supabase.from('follows').insert({ follower_id: currentUser!.id, following_id: userId });
+    if (!currentUser) return alert('Please log in to follow users.');
+    const { error } = await supabase.from('follows').insert({ follower_id: currentUser.id, following_id: userId });
     if (error) console.error('Error following user:', error);
     else setIsFollowing(true);
   };
   
   const handleUnfollow = async () => {
-    if (!handleProtectedAction()) return;
-    const { error } = await supabase.from('follows').delete().eq('follower_id', currentUser!.id).eq('following_id', userId);
+    if (!currentUser) return;
+    const { error } = await supabase.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', userId);
     if (error) console.error('Error unfollowing user:', error);
     else setIsFollowing(false);
   };
 
   return (
-    <main className="min-h-screen bg-gray-900 p-4 pb-24">
-      <header className="mb-8">
-        <Link href="/home" className="text-blue-400 hover:underline">
-          &larr; Back to Timeline
-        </Link>
-      </header>
-
+    // ヘッダーを削除し、代わりにmainにpadding-topを追加
+    <main className="min-h-screen bg-gray-900 p-4 pt-8 pb-24">
       <div className="mx-auto max-w-md">
         {/* Profile Card */}
         <div className="rounded-lg bg-gray-800 p-8 text-center shadow-lg">
