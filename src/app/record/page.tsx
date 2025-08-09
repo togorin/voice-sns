@@ -133,13 +133,10 @@ export default function RecordPage() {
               placeholder="Add a title... (optional)"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              maxLength={18} // maxLength属性を追加
               className="w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
             />
-            <audio 
-              src={audioUrl} 
-              controls 
-              className="w-full" 
-            />
+            
             <button
               onClick={handlePost}
               className="w-full rounded-md bg-[#5151EB] px-4 py-3 font-semibold text-white hover:bg-[#4141d4] disabled:bg-gray-400"
