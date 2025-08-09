@@ -78,7 +78,7 @@ export default function AuthPage() {
             {isLoginView ? (
               <button
                 onClick={handleLogin}
-                className="w-full rounded-md bg-[#5151EB] px-4 py-2 font-semibold text-white hover:bg-[#4141d4]"
+                className="w-full rounded-md bg-[#D3FE3E] px-4 py-2 font-semibold text-black hover:bg-[#c2ef25]"
               >
                 Login
               </button>
@@ -107,8 +107,8 @@ export default function AuthPage() {
         </div>
         {/* ホーム画面への導線を追加 */}
         <div className="text-center">
-          <Link href="/home" className="text-sm text-gray-400 hover:underline">
-            or browse the timeline as a guest
+          <Link href="/home" className="text-sm font-bold text-gray-400 underline hover:text-gray-200">
+            ← or browse the timeline as a guest
           </Link>
         </div>
       </div>
