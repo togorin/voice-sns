@@ -67,28 +67,42 @@ export default function HomePage() {
       
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       
+      // selectクエリにtitleを明示的に追加
       const { data, error } = await supabase.from('posts').select(`*, title, profiles (username, avatar_url), likes (*)`).gte('created_at', twentyFourHoursAgo).order('created_at', { ascending: false });
       
-      if (!error) setPosts(data as Post[]);
+      if (error) {
+        console.error('Error fetching posts:', error);
+      } else {
+        setPosts(data as Post[]);
+      }
       setLoading(false);
     };
     fetchInitialData();
   }, []);
 
+  // ログインしていないユーザーがインタラクティブな操作をしようとしたときの処理
+  const handleProtectedAction = () => {
+    if (!currentUser) {
+      alert('Hop in — log in or sign up to post & like!\nポストやいいねをするにはログインしてね！');
+      return false;
+    }
+    return true;
+  };
+
   const handleLike = async (postId: string) => {
-    if (!currentUser) return;
-    setPosts(posts.map(post => post.id === postId ? { ...post, likes: [...post.likes, { user_id: currentUser.id }] } : post));
-    await supabase.from('likes').insert({ post_id: postId, user_id: currentUser.id });
+    if (!handleProtectedAction()) return;
+    setPosts(posts.map(post => post.id === postId ? { ...post, likes: [...post.likes, { user_id: currentUser!.id }] } : post));
+    await supabase.from('likes').insert({ post_id: postId, user_id: currentUser!.id });
   };
 
   const handleUnlike = async (postId: string) => {
-    if (!currentUser) return;
-    setPosts(posts.map(post => post.id === postId ? { ...post, likes: post.likes.filter(like => like.user_id !== currentUser.id) } : post));
-    await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', currentUser.id);
+    if (!handleProtectedAction()) return;
+    setPosts(posts.map(post => post.id === postId ? { ...post, likes: post.likes.filter(like => like.user_id !== currentUser!.id) } : post));
+    await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', currentUser!.id);
   };
 
   const handleDelete = async (post: Post) => {
-    if (!currentUser || currentUser.id !== post.user_id) return;
+    if (!handleProtectedAction() || currentUser!.id !== post.user_id) return;
     if (!confirm('Are you sure you want to delete this post?')) return;
     
     setPosts(posts.filter(p => p.id !== post.id));
@@ -110,7 +124,7 @@ export default function HomePage() {
     <main className="min-h-screen bg-gray-900 pb-24">
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-700 bg-gray-800 p-4">
         <div className="w-1/3"></div>
-        <h1 className="font-unbounded w-1/3 text-center text-[1.6875rem] font-bold text-white">stew</h1>
+        <h1 className="font-unbounded w-1/3 text-center text-3xl font-bold text-white">stew</h1>
         <div className="flex w-1/3 justify-end">
           {loading ? (
             <div className="h-[30px] w-[76px]"></div>
@@ -149,7 +163,7 @@ export default function HomePage() {
                 </div>
                 
                 {post.title && (
-                  <p className="mb-3 text-white">{post.title}</p>
+                  <p className="mb-3 text-sm text-white">{post.title}</p>
                 )}
 
                 <audio 
