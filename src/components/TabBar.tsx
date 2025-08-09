@@ -21,15 +21,14 @@ export default function TabBar() {
     getCurrentUser();
   }, []);
 
+  // navタグのclassNameから `relative` を削除しました
   return (
-    // relativeクラスを追加して、中央のボタンの位置の基準にします
-    <nav className="fixed bottom-0 left-0 right-0 z-10 border-t border-gray-700 bg-gray-800 relative">
+    <nav className="fixed bottom-0 left-0 right-0 z-10 border-t border-gray-700 bg-gray-800">
       <div className="mx-auto flex h-16 max-w-md items-center justify-around">
         <Link href="/home" className="text-gray-400 hover:text-white">
           <HomeIcon />
         </Link>
         
-        {/* 録音ボタンを中央に配置するためのダミー要素 */}
         <div className="w-20"></div> 
 
         {currentUser ? (
@@ -43,7 +42,6 @@ export default function TabBar() {
         )}
       </div>
       
-      {/* 録音ボタンを絶対配置で中央に設置 */}
       <Link 
         href="/record" 
         className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 flex h-20 w-20 items-center justify-center rounded-full bg-[#5151EB] text-white shadow-lg"
