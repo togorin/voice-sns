@@ -263,7 +263,7 @@ export default function ProfilePage() {
               <div key={post.id} className="rounded-lg bg-gray-800 p-5 shadow-lg">
                 <Countdown createdAt={post.created_at} />
                 {post.title && (
-                  <p className="mb-3 text-white">{post.title}</p>
+                  <p className="mb-3 text-sm text-white">{post.title}</p>
                 )}
                 <audio 
                   src={post.audio_url} 
