@@ -6,14 +6,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
-// 型定義を更新
+// 型定義
 type Like = { user_id: string; };
 type Post = {
   id: string;
   created_at: string;
   audio_url: string;
   user_id: string;
-  title: string | null; // この行を追加しました
+  title: string | null;
   profiles: { username: string; avatar_url: string | null; } | null;
   likes: Like[];
 };
@@ -67,42 +67,28 @@ export default function HomePage() {
       
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       
-      // selectクエリにtitleを明示的に追加
       const { data, error } = await supabase.from('posts').select(`*, title, profiles (username, avatar_url), likes (*)`).gte('created_at', twentyFourHoursAgo).order('created_at', { ascending: false });
       
-      if (error) {
-        console.error('Error fetching posts:', error);
-      } else {
-        setPosts(data as Post[]);
-      }
+      if (!error) setPosts(data as Post[]);
       setLoading(false);
     };
     fetchInitialData();
   }, []);
 
-  // ログインしていないユーザーがインタラクティブな操作をしようとしたときの処理
-  const handleProtectedAction = () => {
-    if (!currentUser) {
-      alert('Hop in — log in or sign up to post & like!\nポストやいいねをするにはログインしてね！');
-      return false;
-    }
-    return true;
-  };
-
   const handleLike = async (postId: string) => {
-    if (!handleProtectedAction()) return;
-    setPosts(posts.map(post => post.id === postId ? { ...post, likes: [...post.likes, { user_id: currentUser!.id }] } : post));
-    await supabase.from('likes').insert({ post_id: postId, user_id: currentUser!.id });
+    if (!currentUser) return;
+    setPosts(posts.map(post => post.id === postId ? { ...post, likes: [...post.likes, { user_id: currentUser.id }] } : post));
+    await supabase.from('likes').insert({ post_id: postId, user_id: currentUser.id });
   };
 
   const handleUnlike = async (postId: string) => {
-    if (!handleProtectedAction()) return;
-    setPosts(posts.map(post => post.id === postId ? { ...post, likes: post.likes.filter(like => like.user_id !== currentUser!.id) } : post));
-    await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', currentUser!.id);
+    if (!currentUser) return;
+    setPosts(posts.map(post => post.id === postId ? { ...post, likes: post.likes.filter(like => like.user_id !== currentUser.id) } : post));
+    await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', currentUser.id);
   };
 
   const handleDelete = async (post: Post) => {
-    if (!handleProtectedAction() || currentUser!.id !== post.user_id) return;
+    if (!currentUser || currentUser.id !== post.user_id) return;
     if (!confirm('Are you sure you want to delete this post?')) return;
     
     setPosts(posts.filter(p => p.id !== post.id));
@@ -129,7 +115,7 @@ export default function HomePage() {
           {loading ? (
             <div className="h-[30px] w-[76px]"></div>
           ) : currentUser ? (
-            <button onClick={handleLogout} className="rounded-md bg-gray-700 px-3 py-1 text-sm text-gray-200 hover:bg-gray-600">Logout</button>
+            <button onClick={handleLogout} className="rounded-md bg-gray-700 px-4 py-1.5 text-sm font-semibold text-gray-200 hover:bg-gray-600">Logout</button>
           ) : (
             <Link href="/" className="rounded-md bg-[#D3FE3E] px-4 py-1.5 text-sm font-semibold text-black hover:bg-[#c2ef25]">Login</Link>
           )}
@@ -163,7 +149,7 @@ export default function HomePage() {
                 </div>
                 
                 {post.title && (
-                  <p className="mb-3 text-sm text-white">{post.title}</p>
+                  <p className="mb-3 text-white">{post.title}</p>
                 )}
 
                 <audio 
