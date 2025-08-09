@@ -125,7 +125,7 @@ export default function HomePage() {
           {loading ? (
             <div className="h-[30px] w-[76px]"></div>
           ) : currentUser ? (
-            <button onClick={handleLogout} className="rounded-md bg-gray-700 px-3 py-1 text-sm text-gray-200 hover:bg-gray-600">Logout</button>
+            <button onClick={handleLogout} className="rounded-md bg-gray-700 px-4 py-1.5 text-sm font-semibold text-gray-200 hover:bg-gray-600">Logout</button>
           ) : (
             <Link href="/" className="rounded-md bg-[#D3FE3E] px-4 py-1.5 text-sm font-semibold text-black hover:bg-[#c2ef25]">Login</Link>
           )}
