@@ -151,7 +151,7 @@ export default function RecordPage() {
             />
             <button
               onClick={handlePost}
-              className="w-full rounded-md bg-[#5151EB] px-4 py-3 font-semibold text-white hover:bg-[#4141d4] disabled:bg-gray-400"
+              className="w-full rounded-md bg-[#D3FE3E] px-4 py-3 font-semibold text-white hover:bg-[#4141d4] disabled:bg-gray-400"
               disabled={isUploading}
             >
               {isUploading ? 'Uploading...' : 'Post'}
