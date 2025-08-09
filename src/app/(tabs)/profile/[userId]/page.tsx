@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
-// 型定義
+// 型定義を更新
 type Profile = {
   username: string;
   avatar_url: string | null;
@@ -17,6 +17,7 @@ type Post = {
   id: string;
   created_at: string;
   audio_url: string;
+  title: string | null; // titleを追加
 };
 
 // カウントダウン表示用のコンポーネント
@@ -39,14 +40,13 @@ const Countdown = ({ createdAt }: { createdAt: string }) => {
     };
 
     calculateTimeLeft();
-    const interval = setInterval(calculateTimeLeft, 60000); // 1分ごとに更新
+    const interval = setInterval(calculateTimeLeft, 60000);
 
     return () => clearInterval(interval);
   }, [createdAt]);
 
   return <p className="mb-3 text-xs text-gray-500">{timeLeft}</p>;
 };
-
 
 export default function ProfilePage() {
   const params = useParams();
@@ -82,14 +82,11 @@ export default function ProfilePage() {
         setUsernameText(profileData.username || '');
       }
 
-      // 24時間前の時刻を計算
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
+      // postsテーブルからtitleも取得するように変更
       const { data: postData } = await supabase
         .from('posts')
-        .select('id, created_at, audio_url')
+        .select('id, created_at, audio_url, title')
         .eq('user_id', userId)
-        .gte('created_at', twentyFourHoursAgo) // 24時間以内の投稿のみ取得
         .order('created_at', { ascending: false });
       if (postData) setPosts(postData);
 
@@ -258,9 +255,12 @@ export default function ProfilePage() {
           <div className="space-y-6">
             {posts.length > 0 ? posts.map((post) => (
               <div key={post.id} className="rounded-lg bg-gray-800 p-5 shadow-lg">
-                {/* カウントダウンコンポーネントを配置 */}
                 <Countdown createdAt={post.created_at} />
-                <audio src={post.audio_url} controls className="w-full" />
+                {/* もしタイトルがあれば、それを表示 */}
+                {post.title && (
+                  <p className="mb-3 text-white">{post.title}</p>
+                )}
+                
               </div>
             )) : <p className="text-center text-gray-400">No posts yet.</p>}
           </div>
