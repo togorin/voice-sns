@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link'; // Linkコンポーネントをインポート
 
 export default function AuthPage() {
   const [email, setEmail] = useState('');
@@ -77,14 +78,14 @@ export default function AuthPage() {
             {isLoginView ? (
               <button
                 onClick={handleLogin}
-                className="w-full rounded-md bg-[#D3FE3E] px-4 py-2 font-semibold text-black hover:bg-[#c2ef25]"
+                className="w-full rounded-md bg-[#5151EB] px-4 py-2 font-semibold text-white hover:bg-[#4141d4]"
               >
                 Login
               </button>
             ) : (
               <button
                 onClick={handleSignUp}
-                className="w-full rounded-md bg-[#D3FE3E] px-4 py-2 font-semibold text-black hover:bg-[#c2ef25]"
+                className="w-full rounded-md bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700"
               >
                 Sign Up
               </button>
@@ -103,6 +104,12 @@ export default function AuthPage() {
               {isLoginView ? 'Sign Up' : 'Login'}
             </button>
           </div>
+        </div>
+        {/* ホーム画面への導線を追加 */}
+        <div className="text-center">
+          <Link href="/home" className="text-sm text-gray-400 hover:underline">
+            or browse the timeline as a guest
+          </Link>
         </div>
       </div>
     </main>
