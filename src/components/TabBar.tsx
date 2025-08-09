@@ -22,14 +22,16 @@ export default function TabBar() {
   }, []);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-10 border-t border-gray-700 bg-gray-800">
+    // relativeクラスを追加して、中央のボタンの位置の基準にします
+    <nav className="fixed bottom-0 left-0 right-0 z-10 border-t border-gray-700 bg-gray-800 relative">
       <div className="mx-auto flex h-16 max-w-md items-center justify-around">
         <Link href="/home" className="text-gray-400 hover:text-white">
           <HomeIcon />
         </Link>
-        <Link href="/record" className="rounded-full bg-[#5151EB] p-3 text-white">
-          <RecordIcon />
-        </Link>
+        
+        {/* 録音ボタンを中央に配置するためのダミー要素 */}
+        <div className="w-20"></div> 
+
         {currentUser ? (
           <Link href={`/profile/${currentUser.id}`} className="text-gray-400 hover:text-white">
             <ProfileIcon />
@@ -40,6 +42,14 @@ export default function TabBar() {
           </Link>
         )}
       </div>
+      
+      {/* 録音ボタンを絶対配置で中央に設置 */}
+      <Link 
+        href="/record" 
+        className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 flex h-20 w-20 items-center justify-center rounded-full bg-[#5151EB] text-white shadow-lg"
+      >
+        <RecordIcon />
+      </Link>
     </nav>
   );
 }
