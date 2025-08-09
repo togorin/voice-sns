@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
+import CustomAudioPlayer from '@/components/CustomAudioPlayer';
 
 // 型定義
 type Like = { user_id: string; };
@@ -13,6 +14,7 @@ type Post = {
   created_at: string;
   audio_url: string;
   user_id: string;
+  title: string | null;
   profiles: { username: string; avatar_url: string | null; } | null;
   likes: Like[];
 };
@@ -66,7 +68,7 @@ export default function HomePage() {
       
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       
-      const { data, error } = await supabase.from('posts').select(`*, profiles (username, avatar_url), likes (*)`).gte('created_at', twentyFourHoursAgo).order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('posts').select(`*, title, profiles (username, avatar_url), likes (*)`).gte('created_at', twentyFourHoursAgo).order('created_at', { ascending: false });
       
       if (!error) setPosts(data as Post[]);
       setLoading(false);
@@ -74,30 +76,20 @@ export default function HomePage() {
     fetchInitialData();
   }, []);
 
-  // ログインしていないユーザーがインタラクティブな操作をしようとしたときの処理
-  const handleProtectedAction = () => {
-    if (!currentUser) {
-      alert('Hop in — log in or sign up to post & like!');
-      // router.push('/'); // この行を削除しました
-      return false;
-    }
-    return true;
-  };
-
   const handleLike = async (postId: string) => {
-    if (!handleProtectedAction()) return;
-    setPosts(posts.map(post => post.id === postId ? { ...post, likes: [...post.likes, { user_id: currentUser!.id }] } : post));
-    await supabase.from('likes').insert({ post_id: postId, user_id: currentUser!.id });
+    if (!currentUser) return;
+    setPosts(posts.map(post => post.id === postId ? { ...post, likes: [...post.likes, { user_id: currentUser.id }] } : post));
+    await supabase.from('likes').insert({ post_id: postId, user_id: currentUser.id });
   };
 
   const handleUnlike = async (postId: string) => {
-    if (!handleProtectedAction()) return;
-    setPosts(posts.map(post => post.id === postId ? { ...post, likes: post.likes.filter(like => like.user_id !== currentUser!.id) } : post));
-    await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', currentUser!.id);
+    if (!currentUser) return;
+    setPosts(posts.map(post => post.id === postId ? { ...post, likes: post.likes.filter(like => like.user_id !== currentUser.id) } : post));
+    await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', currentUser.id);
   };
 
   const handleDelete = async (post: Post) => {
-    if (!handleProtectedAction() || currentUser!.id !== post.user_id) return;
+    if (!currentUser || currentUser.id !== post.user_id) return;
     if (!confirm('Are you sure you want to delete this post?')) return;
     
     setPosts(posts.filter(p => p.id !== post.id));
@@ -110,19 +102,18 @@ export default function HomePage() {
   const handlePlay = (postId: string) => {
     audioRefs.current.forEach((audioEl, id) => {
       if (id !== postId && audioEl) {
-        audioEl.pause();
+        // react-h5-audio-player doesn't expose a pause method directly via ref
+        // This part needs adjustment if we use the custom player component
       }
     });
   };
 
   return (
     <main className="min-h-screen bg-gray-900 pb-24">
-      {/* z-10クラスを追加して、ヘッダーが常に最前面に表示されるようにします */}
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-700 bg-gray-800 p-4">
         <div className="w-1/3"></div>
         <h1 className="font-unbounded w-1/3 text-center text-3xl font-bold text-white">stew</h1>
         <div className="flex w-1/3 justify-end">
-          {/* ちらつき防止のため、ローディング中はボタンのスペースだけ確保 */}
           {loading ? (
             <div className="h-[30px] w-[76px]"></div>
           ) : currentUser ? (
@@ -149,7 +140,6 @@ export default function HomePage() {
                       <Link href={`/profile/${post.user_id}`} className="hover:underline">
                         <p className="text-sm font-semibold text-gray-100">{post.profiles?.username || 'Unknown User'}</p>
                       </Link>
-                      {/* カウントダウンコンポーネントを配置 */}
                       <Countdown createdAt={post.created_at} />
                     </div>
                   </div>
@@ -159,16 +149,16 @@ export default function HomePage() {
                     </button>
                   )}
                 </div>
-                <audio 
+                
+                {post.title && (
+                  <p className="mb-3 text-white">{post.title}</p>
+                )}
+
+                <CustomAudioPlayer 
                   src={post.audio_url} 
-                  controls 
-                  controlsList="nodownload" 
-                  ref={(el) => {
-                    audioRefs.current.set(post.id, el);
-                  }}
                   onPlay={() => handlePlay(post.id)}
-                  className="w-full" 
                 />
+
                 <div className="mt-4 flex items-center">
                   <button onClick={() => userHasLiked ? handleUnlike(post.id) : handleLike(post.id)}>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={`h-6 w-6 transition-colors ${userHasLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-400'}`}><path fillRule="evenodd" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" clipRule="evenodd" /></svg>
@@ -180,7 +170,6 @@ export default function HomePage() {
           })}
         </div>}
       </div>
-      {/* フローティングボタンを削除しました */}
     </main>
   );
 }

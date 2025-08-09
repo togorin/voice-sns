@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import CustomAudioPlayer from '@/components/CustomAudioPlayer'; // この行を追加
 
 export default function RecordPage() {
   const [isRecording, setIsRecording] = useState(false);
