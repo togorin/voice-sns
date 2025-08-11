@@ -23,7 +23,7 @@ export default function RecordPage() {
       // マイクの自動調整機能をオフにする設定を追加
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
-          autoGainControl: false,
+          autoGainControl: true,
           noiseSuppression: false,
           echoCancellation: false,
         }
