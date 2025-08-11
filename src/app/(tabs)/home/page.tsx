@@ -124,7 +124,6 @@ export default function HomePage() {
     if (navigator.share) {
       navigator.share({
         title: `stew post by ${post.profiles?.username || 'a user'}`,
-        text: post.title || 'Listen to this voice memo on stew!',
         url: postUrl,
       })
       .catch((error) => console.log('Error sharing', error));
