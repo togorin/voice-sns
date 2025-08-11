@@ -112,6 +112,23 @@ export default function HomePage() {
     });
   };
 
+  // シェア処理
+  const handleShare = (post: Post) => {
+    const postUrl = `${window.location.origin}/post/${post.id}`;
+    if (navigator.share) {
+      navigator.share({
+        title: `stew post by ${post.profiles?.username || 'a user'}`,
+        text: post.title || 'Listen to this voice memo on stew!',
+        url: postUrl,
+      })
+      .catch((error) => console.log('Error sharing', error));
+    } else {
+      // Web Share APIが使えない場合のフォールバック
+      navigator.clipboard.writeText(postUrl);
+      alert('Post URL copied to clipboard!');
+    }
+  };
+
   return (
     <main className="min-h-screen bg-gray-900 pb-24">
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-700 bg-gray-800 p-4">
@@ -168,11 +185,17 @@ export default function HomePage() {
                     className="w-full" 
                   />
 
-                  <div className="mt-4 flex items-center">
-                    <button onClick={(e) => { e.stopPropagation(); e.preventDefault(); userHasLiked ? handleUnlike(post.id) : handleLike(post.id); }}>
+                  <div className="mt-4 flex items-center gap-4">
+                    <button onClick={(e) => { e.stopPropagation(); e.preventDefault(); userHasLiked ? handleUnlike(post.id) : handleLike(post.id); }} className="flex items-center gap-1.5">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={`h-6 w-6 transition-colors ${userHasLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-400'}`}><path fillRule="evenodd" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" clipRule="evenodd" /></svg>
+                      <span className="text-sm text-gray-400">{post.likes.length}</span>
                     </button>
-                    <span className="ml-2 text-sm text-gray-400">{post.likes.length}</span>
+                    {/* シェアボタンを追加 */}
+                    <button onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleShare(post); }} className="text-gray-500 hover:text-white">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8m-4-6l-4-4m0 0L8 6m4-4v12" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
               </Link>
