@@ -153,7 +153,7 @@ export default function HomePage() {
             return (
               <Link href={`/post/${post.id}`} key={post.id}>
                 <div className="mb-3 rounded-lg bg-gray-800 p-5 shadow-lg transition-colors hover:bg-gray-700">
-                  <div className="mb-3 flex items-center justify-between">
+                  <div className="mb-6 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Link href={`/profile/${post.user_id}`} onClick={(e) => e.stopPropagation()} className="hover:underline">
                         <img src={post.profiles?.avatar_url || `https://api.dicebear.com/8.x/initials/svg?seed=${post.profiles?.username || '?'}`} alt="Avatar" className="h-10 w-10 rounded-full object-cover" />
