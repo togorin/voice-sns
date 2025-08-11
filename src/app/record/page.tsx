@@ -17,72 +17,67 @@ export default function RecordPage() {
   const audioChunksRef = useRef<Blob[]>([]);
   const mimeTypeRef = useRef<string>('');
   const audioContextRef = useRef<AudioContext | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-
 
   const handleStartRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      // 1. マイクから音声ストリーム取得（自動ゲイン制御も有効化）
+      const rawStream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          autoGainControl: false,
-          noiseSuppression: false,
-          echoCancellation: false,
+          autoGainControl: true,
+          noiseSuppression: true,
+          echoCancellation: true,
         }
       });
-      streamRef.current = stream; // ストリームを保
 
-      // --- ここからが新しい音量増幅のコード ---
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      audioContextRef.current = audioContext;
+      // 2. Web Audio API でゲイン調整
+      audioContextRef.current = new AudioContext();
+      const source = audioContextRef.current.createMediaStreamSource(rawStream);
 
-      const source = audioContext.createMediaStreamSource(stream);
-      
-      // ゲインノード（仮想的な音量ツマミ）を作成
-      const gainNode = audioContext.createGain();
-      gainNode.gain.setValueAtTime(2.0, audioContext.currentTime); // 音量を2倍に増幅
+      const gainNode = audioContextRef.current.createGain();
+      gainNode.gain.value = 2.5; // ★ 音量を約2.5倍に（調整可能）
 
-      // 録音用の出力先を作成
-      const destination = audioContext.createMediaStreamDestination();
-      
-      // マイク入力 -> 音量ツマミ -> 録音出力先 と接続
       source.connect(gainNode);
+
+      // 処理後のストリームを MediaRecorder 用に変換
+      const destination = audioContextRef.current.createMediaStreamDestination();
       gainNode.connect(destination);
-      // --- 修正ここまで ---
-      
+      const processedStream = destination.stream;
+
+      // 3. 録音の MIME タイプ判定
       const supportedMimeTypes = ['audio/mp4', 'audio/webm'];
       const supportedType = supportedMimeTypes.find(type => MediaRecorder.isTypeSupported(type));
-      
       if (!supportedType) {
         alert('Audio recording is not supported on your browser.');
         return;
       }
       mimeTypeRef.current = supportedType;
 
-      const options = {
+      // 4. MediaRecorder の設定
+      const mediaRecorder = new MediaRecorder(processedStream, {
         mimeType: supportedType,
         audioBitsPerSecond: 128000,
-      };
-      // 増幅された音声ストリームを使って録音を開始
-      const mediaRecorder = new MediaRecorder(destination.stream, options);
-
+      });
       mediaRecorderRef.current = mediaRecorder;
-      
+
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) audioChunksRef.current.push(event.data);
       };
-      
+
       mediaRecorder.onstop = () => {
         const newAudioBlob = new Blob(audioChunksRef.current, { type: mimeTypeRef.current });
         setAudioBlob(newAudioBlob);
         setAudioUrl(URL.createObjectURL(newAudioBlob));
         audioChunksRef.current = [];
+        audioContextRef.current?.close();
       };
-      
+
+      // 5. 録音開始
       mediaRecorder.start();
       setIsRecording(true);
       setAudioUrl(null);
       setAudioBlob(null);
       setTitle('');
+
     } catch (err) {
       console.error('Error accessing microphone:', err);
       alert('Could not access the microphone. Please check permissions.');
@@ -92,9 +87,6 @@ export default function RecordPage() {
   const handleStopRecording = () => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
-      // マイクのトラックを停止して、アクセスを解放
-      streamRef.current?.getTracks().forEach(track => track.stop());
-      audioContextRef.current?.close();
       setIsRecording(false);
     }
   };
@@ -136,6 +128,9 @@ export default function RecordPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-900 p-4">
+      <Link href="/home" className="absolute top-5 left-5 text-2xl font-bold text-white hover:text-gray-300">
+        &lt;
+      </Link>
       <div className="w-full max-w-md rounded-lg bg-gray-800 p-8 text-center shadow-lg">
         <h1 className="text-xl font-bold text-white">Post a Voice Memo</h1>
         <div className="my-8">
