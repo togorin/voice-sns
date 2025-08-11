@@ -147,13 +147,12 @@ export default function HomePage() {
       <div className="p-4">
         {loading ? <p className="text-center text-gray-400">Loading posts...</p> : 
         posts.length === 0 ? <p className="text-center text-gray-400">No posts to show. Start by recording your first voice memo!</p> : 
-        // このdivに space-y-6 を追加して、投稿間のスペースを確保します
         <div className="mx-auto max-w-md space-y-6">
           {posts.map((post) => {
             const userHasLiked = currentUser ? post.likes.some(like => like.user_id === currentUser.id) : false;
             return (
               <Link href={`/post/${post.id}`} key={post.id}>
-                <div className="rounded-lg bg-gray-800 p-5 shadow-lg transition-colors hover:bg-gray-700">
+                <div className="mb-3 rounded-lg bg-gray-800 p-5 shadow-lg transition-colors hover:bg-gray-700">
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Link href={`/profile/${post.user_id}`} onClick={(e) => e.stopPropagation()} className="hover:underline">
