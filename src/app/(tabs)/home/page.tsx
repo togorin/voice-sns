@@ -80,8 +80,7 @@ export default function HomePage() {
     };
     fetchInitialData();
   }, []);
-
-  const handleProtectedAction = () => {
+ const handleProtectedAction = () => {
     if (!currentUser) {
       alert('Hop in — log in or sign up to post & like!\nポストやいいねをするにはログインしてね！');
       return false;
@@ -90,14 +89,15 @@ export default function HomePage() {
   };
 
   const handleLike = async (postId: string) => {
-    if (!handleProtectedAction()) return; // この行を追加
-    // ...
+    if (!handleProtectedAction()) return;
+    setPosts(posts.map(post => post.id === postId ? { ...post, likes: [...post.likes, { user_id: currentUser!.id }] } : post));
+    await supabase.from('likes').insert({ post_id: postId, user_id: currentUser!.id });
   };
 
   const handleUnlike = async (postId: string) => {
-    if (!currentUser) return;
-    setPosts(posts.map(post => post.id === postId ? { ...post, likes: post.likes.filter(like => like.user_id !== currentUser.id) } : post));
-    await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', currentUser.id);
+    if (!handleProtectedAction()) return;
+    setPosts(posts.map(post => post.id === postId ? { ...post, likes: post.likes.filter(like => like.user_id !== currentUser!.id) } : post));
+    await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', currentUser!.id);
   };
 
   const handleDelete = async (post: Post) => {
