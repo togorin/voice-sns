@@ -16,18 +16,37 @@ export default function RecordPage() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const mimeTypeRef = useRef<string>('');
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
 
   const handleStartRecording = async () => {
     try {
-      // --- ここを修正 ---
-      // マイクの自動調整機能をオフにする設定を追加
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
-          autoGainControl: true,
+          autoGainControl: false,
           noiseSuppression: false,
           echoCancellation: false,
         }
       });
+      streamRef.current = stream; // ストリームを保
+
+      // --- ここからが新しい音量増幅のコード ---
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioContextRef.current = audioContext;
+
+      const source = audioContext.createMediaStreamSource(stream);
+      
+      // ゲインノード（仮想的な音量ツマミ）を作成
+      const gainNode = audioContext.createGain();
+      gainNode.gain.setValueAtTime(2.0, audioContext.currentTime); // 音量を2倍に増幅
+
+      // 録音用の出力先を作成
+      const destination = audioContext.createMediaStreamDestination();
+      
+      // マイク入力 -> 音量ツマミ -> 録音出力先 と接続
+      source.connect(gainNode);
+      gainNode.connect(destination);
       // --- 修正ここまで ---
       
       const supportedMimeTypes = ['audio/mp4', 'audio/webm'];
@@ -39,14 +58,12 @@ export default function RecordPage() {
       }
       mimeTypeRef.current = supportedType;
 
-      // --- ここを修正 ---
-      // 高音質で録音するためのオプションを追加
       const options = {
         mimeType: supportedType,
-        audioBitsPerSecond: 128000, // 128kbpsに設定 (標準的な高音質)
+        audioBitsPerSecond: 128000,
       };
-      const mediaRecorder = new MediaRecorder(stream, options);
-      // --- 修正ここまで ---
+      // 増幅された音声ストリームを使って録音を開始
+      const mediaRecorder = new MediaRecorder(destination.stream, options);
 
       mediaRecorderRef.current = mediaRecorder;
       
@@ -75,6 +92,9 @@ export default function RecordPage() {
   const handleStopRecording = () => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
+      // マイクのトラックを停止して、アクセスを解放
+      streamRef.current?.getTracks().forEach(track => track.stop());
+      audioContextRef.current?.close();
       setIsRecording(false);
     }
   };
