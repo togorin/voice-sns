@@ -5,6 +5,15 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+// --- ここからが新しい修正 ---
+// TypeScriptに、windowオブジェクトがwebkitAudioContextを持つ可能性を伝えます
+declare global {
+  interface Window {
+    webkitAudioContext: typeof AudioContext
+  }
+}
+// --- 修正ここまで ---
+
 export default function RecordPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -17,67 +26,69 @@ export default function RecordPage() {
   const audioChunksRef = useRef<Blob[]>([]);
   const mimeTypeRef = useRef<string>('');
   const audioContextRef = useRef<AudioContext | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
 
   const handleStartRecording = async () => {
     try {
-      // 1. マイクから音声ストリーム取得（自動ゲイン制御も有効化）
-      const rawStream = await navigator.mediaDevices.getUserMedia({
+      const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
-          autoGainControl: true,
-          noiseSuppression: true,
-          echoCancellation: true,
+          autoGainControl: false,
+          noiseSuppression: false,
+          echoCancellation: false,
         }
       });
+      streamRef.current = stream;
 
-      // 2. Web Audio API でゲイン調整
-      audioContextRef.current = new AudioContext();
-      const source = audioContextRef.current.createMediaStreamSource(rawStream);
+      // --- ここを修正 ---
+      // (window as any) の部分を削除しました
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      audioContextRef.current = audioContext;
+      // --- 修正ここまで ---
 
-      const gainNode = audioContextRef.current.createGain();
-      gainNode.gain.value = 2.5; // ★ 音量を約2.5倍に（調整可能）
+      const source = audioContext.createMediaStreamSource(stream);
+      
+      const gainNode = audioContext.createGain();
+      gainNode.gain.setValueAtTime(2.0, audioContext.currentTime);
 
+      const destination = audioContext.createMediaStreamDestination();
+      
       source.connect(gainNode);
-
-      // 処理後のストリームを MediaRecorder 用に変換
-      const destination = audioContextRef.current.createMediaStreamDestination();
       gainNode.connect(destination);
-      const processedStream = destination.stream;
-
-      // 3. 録音の MIME タイプ判定
+      
       const supportedMimeTypes = ['audio/mp4', 'audio/webm'];
       const supportedType = supportedMimeTypes.find(type => MediaRecorder.isTypeSupported(type));
+      
       if (!supportedType) {
         alert('Audio recording is not supported on your browser.');
         return;
       }
       mimeTypeRef.current = supportedType;
 
-      // 4. MediaRecorder の設定
-      const mediaRecorder = new MediaRecorder(processedStream, {
+      const options = {
         mimeType: supportedType,
         audioBitsPerSecond: 128000,
-      });
-      mediaRecorderRef.current = mediaRecorder;
+      };
+      const mediaRecorder = new MediaRecorder(destination.stream, options);
 
+      mediaRecorderRef.current = mediaRecorder;
+      
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) audioChunksRef.current.push(event.data);
       };
-
+      
       mediaRecorder.onstop = () => {
         const newAudioBlob = new Blob(audioChunksRef.current, { type: mimeTypeRef.current });
         setAudioBlob(newAudioBlob);
         setAudioUrl(URL.createObjectURL(newAudioBlob));
         audioChunksRef.current = [];
-        audioContextRef.current?.close();
       };
-
-      // 5. 録音開始
+      
       mediaRecorder.start();
       setIsRecording(true);
       setAudioUrl(null);
       setAudioBlob(null);
       setTitle('');
-
     } catch (err) {
       console.error('Error accessing microphone:', err);
       alert('Could not access the microphone. Please check permissions.');
@@ -87,6 +98,8 @@ export default function RecordPage() {
   const handleStopRecording = () => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
+      streamRef.current?.getTracks().forEach(track => track.stop());
+      audioContextRef.current?.close();
       setIsRecording(false);
     }
   };
@@ -128,9 +141,6 @@ export default function RecordPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-900 p-4">
-      <Link href="/home" className="absolute top-5 left-5 text-2xl font-bold text-white hover:text-gray-300">
-        &lt;
-      </Link>
       <div className="w-full max-w-md rounded-lg bg-gray-800 p-8 text-center shadow-lg">
         <h1 className="text-xl font-bold text-white">Post a Voice Memo</h1>
         <div className="my-8">
