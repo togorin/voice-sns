@@ -19,6 +19,8 @@ export default function RecordPage() {
 
   const handleStartRecording = async () => {
     try {
+      // --- ここを修正 ---
+      // マイクの自動調整機能をオフにする設定を追加
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           autoGainControl: false,
@@ -26,6 +28,7 @@ export default function RecordPage() {
           echoCancellation: false,
         }
       });
+      // --- 修正ここまで ---
       
       const supportedMimeTypes = ['audio/mp4', 'audio/webm'];
       const supportedType = supportedMimeTypes.find(type => MediaRecorder.isTypeSupported(type));
@@ -36,11 +39,14 @@ export default function RecordPage() {
       }
       mimeTypeRef.current = supportedType;
 
+      // --- ここを修正 ---
+      // 高音質で録音するためのオプションを追加
       const options = {
         mimeType: supportedType,
-        audioBitsPerSecond: 128000,
+        audioBitsPerSecond: 128000, // 128kbpsに設定 (標準的な高音質)
       };
       const mediaRecorder = new MediaRecorder(stream, options);
+      // --- 修正ここまで ---
 
       mediaRecorderRef.current = mediaRecorder;
       
@@ -110,9 +116,6 @@ export default function RecordPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-900 p-4">
-      <Link href="/home" className="absolute top-5 left-5 text-2xl font-bold text-white hover:text-gray-300">
-        &lt;
-      </Link>
       <div className="w-full max-w-md rounded-lg bg-gray-800 p-8 text-center shadow-lg">
         <h1 className="text-xl font-bold text-white">Post a Voice Memo</h1>
         <div className="my-8">
