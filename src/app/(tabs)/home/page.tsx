@@ -152,7 +152,7 @@ export default function HomePage() {
             const userHasLiked = currentUser ? post.likes.some(like => like.user_id === currentUser.id) : false;
             return (
               <Link href={`/post/${post.id}`} key={post.id}>
-                <div className="mb-3 rounded-lg bg-gray-800 p-5 shadow-lg transition-colors hover:bg-gray-700">
+                <div className="mb-6 rounded-lg bg-gray-800 p-5 shadow-lg transition-colors hover:bg-gray-700">
                   <div className="mb-6 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Link href={`/profile/${post.user_id}`} onClick={(e) => e.stopPropagation()} className="hover:underline">
