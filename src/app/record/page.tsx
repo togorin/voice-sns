@@ -141,6 +141,13 @@ export default function RecordPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-900 p-4">
+         {/* 戻るボタンを追加 */}
+      <Link href="/home" className="absolute top-4 left-4 text-[#D3FE3E] hover:text-[#c2ef25]">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </Link>
+
       <div className="w-full max-w-md rounded-lg bg-gray-800 p-8 text-center shadow-lg">
         <h1 className="text-xl font-bold text-white">Post a Voice Memo</h1>
         <div className="my-8">
