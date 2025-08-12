@@ -56,7 +56,9 @@ export default function AuthPage() {
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-900 p-4">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center">
-          <h1 className="font-unbounded text-7xl font-bold text-white">stew</h1>
+            <h1 className="font-unbounded text-5xl font-bold text-white">stew</h1>
+          {/* キャッチコピーを追加 */}
+          <p className="mt-2 text-lg text-gray-400">Speak your mind.</p>
         </div>
         <div className="rounded-lg bg-gray-800 p-6 shadow-lg">
           <div className="space-y-4">
