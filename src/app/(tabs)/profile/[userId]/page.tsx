@@ -260,7 +260,7 @@ export default function ProfilePage() {
             </div>
           )}
 
-          <div className="my-4 min-h-[4rem]">
+          <div className="my-4 min-h-[3rem]">
             {currentUser?.id === userId && isEditingBio ? (
               <div className="space-y-2">
                 <textarea
