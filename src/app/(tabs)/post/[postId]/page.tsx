@@ -107,7 +107,7 @@ export default function PostPage() {
               </div>
             </div>
             {post.title && (
-              <p className="mb-3 text-white">{post.title}</p>
+              <p className="mb-3 text-sm text-white">{post.title}</p>
             )}
             <audio 
               src={post.audio_url} 
