@@ -260,7 +260,7 @@ export default function ProfilePage() {
             </div>
           )}
 
-          <div className="mt-4 min-h-[6rem]">
+          <div className="my-4 min-h-[4rem]">
             {currentUser?.id === userId && isEditingBio ? (
               <div className="space-y-2">
                 <textarea
@@ -287,7 +287,7 @@ export default function ProfilePage() {
             )}
           </div>
 
-          <div className="mt-6">
+          <div>
             {loading ? <p className="text-gray-400">Loading...</p> : 
             currentUser?.id === userId ? 
               null : 
