@@ -128,10 +128,11 @@ export default function PostPage() {
       {/* ヘッダーをホーム画面と同じデザインに変更 */}
 
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-700 bg-gray-800 p-4">
-
         <div className="w-1/3">
-          <Link href="/home" className="text-blue-400 hover:underline">
-            &larr; Back
+            <Link href="/home" className="text-[#D3FE3E] hover:text-[#c2ef25]">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
           </Link>
         </div>
         <h1 className="font-unbounded w-1/3 text-center text-3xl font-bold text-white">stew</h1>
