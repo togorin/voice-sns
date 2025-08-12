@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation'; // useRouterを追加
 import type { User } from '@supabase/supabase-js';
 
 // タイムラインと同じPost型を定義
@@ -47,7 +47,7 @@ export default function PostPage() {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-
+ const router = useRouter(); // useRouterを準備
   useEffect(() => {
     const fetchPost = async () => {
       setLoading(true);
@@ -74,9 +74,47 @@ export default function PostPage() {
     }
   }, [postId]);
 
-  // いいね/いいね解除のロジックはタイムラインと同じ
-  const handleLike = async () => { /* ... */ };
-  const handleUnlike = async () => { /* ... */ };
+  const handleProtectedAction = () => {
+
+    if (!currentUser) {
+
+      alert('Hop in — log in or sign up to post & like!\nポストやいいねをするにはログインしてね！');
+
+      return false;
+
+    }
+
+    return true;
+
+  };
+
+
+
+  const handleLike = async () => {
+
+    if (!handleProtectedAction() || !post) return;
+
+    setPost({ ...post, likes: [...post.likes, { user_id: currentUser!.id }] });
+
+    await supabase.from('likes').insert({ post_id: postId, user_id: currentUser!.id });
+
+  };
+
+
+
+  const handleUnlike = async () => {
+
+    if (!handleProtectedAction() || !post) return;
+
+    setPost({ ...post, likes: post.likes.filter(like => like.user_id !== currentUser!.id) });
+
+    await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', currentUser!.id);
+
+  };
+
+
+
+  const userHasLiked = currentUser && post ? post.likes.some(like => like.user_id === currentUser.id) : false;
 
   return (
     <main className="min-h-screen bg-gray-900 p-4 pt-8 pb-24">
@@ -116,9 +154,13 @@ export default function PostPage() {
               className="w-full" 
             />
             <div className="mt-4 flex items-center">
-              {/* いいねボタン (ロジックは後で実装) */}
-              <button>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-500"><path fillRule="evenodd" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" clipRule="evenodd" /></svg>
+             <button onClick={() => userHasLiked ? handleUnlike() : handleLike()}>
+
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={`h-6 w-6 transition-colors ${userHasLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-400'}`}>
+
+                  <path fillRule="evenodd" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" clipRule="evenodd" />
+
+                </svg>
               </button>
               <span className="ml-2 text-sm text-gray-400">{post.likes.length}</span>
             </div>
