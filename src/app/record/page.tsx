@@ -150,7 +150,9 @@ export default function RecordPage() {
               className="rounded-full bg-[#5151EB] px-8 py-8 text-white shadow-lg transition-transform hover:scale-105 disabled:opacity-50"
               disabled={isUploading}
             >
-              Start Recording
+               {/* audioUrlの状態に応じてテキストを切り替えます */}
+
+              {audioUrl ? 'Record again' : 'Start Recording'}
             </button>
           ) : (
             <button
