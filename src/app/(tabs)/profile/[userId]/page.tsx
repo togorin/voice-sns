@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
 // 型定義を更新
@@ -47,6 +47,7 @@ const Countdown = ({ createdAt }: { createdAt: string }) => {
 export default function ProfilePage() {
   const params = useParams();
   const userId = params.userId as string;
+  const router = useRouter();
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -58,6 +59,11 @@ export default function ProfilePage() {
   const [bioText, setBioText] = useState('');
   const [isEditingUsername, setIsEditingUsername] = useState(false);
   const [usernameText, setUsernameText] = useState('');
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
+  };
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -184,8 +190,36 @@ export default function ProfilePage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-900 p-4 pt-8 pb-24">
-      <div className="mx-auto max-w-md">
+      <main className="min-h-screen bg-gray-900 pb-24">
+
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-700 bg-gray-800 p-4">
+
+        <div className="w-1/3">
+
+          {/* Back button can be added here if needed */}
+
+        </div>
+
+        <h1 className="font-unbounded w-1/3 text-center text-3xl font-bold text-white">stew</h1>
+
+        <div className="flex w-1/3 justify-end">
+
+          {loading ? (
+
+            <div className="h-[30px] w-[76px]"></div>
+
+          ) : currentUser ? (
+
+            <button onClick={handleLogout} className="rounded-md bg-gray-700 px-4 py-1.5 text-sm font-semibold text-gray-200 hover:bg-gray-600">Logout</button>
+
+          ) : (
+
+            <Link href="/" className="rounded-md bg-[#D3FE3E] px-4 py-1.5 text-sm font-semibold text-black hover:bg-[#c2ef25]">Login</Link>
+          )}
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-md p-4">
         {/* Profile Card */}
         <div className="rounded-lg bg-gray-800 p-8 text-center shadow-lg">
           <div className="relative mx-auto mb-4 h-32 w-32">
