@@ -276,7 +276,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             ) : (
-                <p className="whitespace-pre-wrap text-left text-gray-400">
+                <p className="whitespace-pre-wrap text-left text-sm text-gray-400">
                 {profile?.bio || (currentUser?.id === userId ? 'Click to add a bio' : '')}
               </p>
             )}
