@@ -5,11 +5,14 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+// --- ここからが新しい修正 ---
+// TypeScriptに、windowオブジェクトがwebkitAudioContextを持つ可能性を伝えます
 declare global {
   interface Window {
     webkitAudioContext: typeof AudioContext
   }
 }
+// --- 修正ここまで ---
 
 export default function RecordPage() {
   const [isRecording, setIsRecording] = useState(false);
@@ -25,21 +28,6 @@ export default function RecordPage() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // 再生時も必ずステレオ化する関数
-  const playWithStereo = (url: string) => {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const audioEl = new Audio(url);
-    const track = ctx.createMediaElementSource(audioEl);
-
-    const splitter = ctx.createChannelSplitter(1);
-    const merger = ctx.createChannelMerger(2);
-    track.connect(splitter);
-    splitter.connect(merger, 0, 0);
-    splitter.connect(merger, 0, 1);
-    merger.connect(ctx.destination);
-
-    audioEl.play();
-  };
 
   const handleStartRecording = async () => {
     try {
@@ -52,26 +40,45 @@ export default function RecordPage() {
       });
       streamRef.current = stream;
 
+      // --- ここを修正 ---
+      // (window as any) の部分を削除しました
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
       audioContextRef.current = audioContext;
+      // --- 修正ここまで ---
 
       const source = audioContext.createMediaStreamSource(stream);
+      
       const gainNode = audioContext.createGain();
       gainNode.gain.setValueAtTime(2.0, audioContext.currentTime);
 
-      // モノラル→ステレオ変換
-      const splitter = audioContext.createChannelSplitter(1);
+ // --- ここからが新しいステレオ修正のコード ---
+
+      // チャンネルを分割するノードを作成
+      const splitter = audioContext.createChannelSplitter(2);
+      // チャンネルを結合するノードを作成
+
       const merger = audioContext.createChannelMerger(2);
+
+      // マイク入力 -> 音量ツマミ -> 分割ノード と接続
+
       source.connect(gainNode);
       gainNode.connect(splitter);
+
+      // 左チャンネル(0)の出力を、結合ノードの左(0)と右(1)の両方の入力に接続
+      // これにより、モノラル音声が両耳から聞こえるようになります
+
       splitter.connect(merger, 0, 0);
       splitter.connect(merger, 0, 1);
 
-      const destination = audioContext.createMediaStreamDestination();
-      merger.connect(destination);
+      // --- 修正ここまで ---
 
+      const destination = audioContext.createMediaStreamDestination();
+      
+      merger.connect(destination); // 結合された音声を録音の出力先として設定
+      
       const supportedMimeTypes = ['audio/mp4', 'audio/webm'];
       const supportedType = supportedMimeTypes.find(type => MediaRecorder.isTypeSupported(type));
+      
       if (!supportedType) {
         alert('Audio recording is not supported on your browser.');
         return;
@@ -83,21 +90,20 @@ export default function RecordPage() {
         audioBitsPerSecond: 128000,
       };
       const mediaRecorder = new MediaRecorder(destination.stream, options);
-      mediaRecorderRef.current = mediaRecorder;
 
+      mediaRecorderRef.current = mediaRecorder;
+      
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) audioChunksRef.current.push(event.data);
       };
-
+      
       mediaRecorder.onstop = () => {
         const newAudioBlob = new Blob(audioChunksRef.current, { type: mimeTypeRef.current });
         setAudioBlob(newAudioBlob);
-        const url = URL.createObjectURL(newAudioBlob);
-        setAudioUrl(url);
-        playWithStereo(url); // 停止後すぐステレオ再生
+        setAudioUrl(URL.createObjectURL(newAudioBlob));
         audioChunksRef.current = [];
       };
-
+      
       mediaRecorder.start();
       setIsRecording(true);
       setAudioUrl(null);
@@ -155,6 +161,7 @@ export default function RecordPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-900 p-4">
+         {/* 戻るボタンを追加 */}
       <Link href="/home" className="absolute top-4 left-4 text-[#D3FE3E] hover:text-[#c2ef25]">
         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -170,6 +177,8 @@ export default function RecordPage() {
               className="rounded-full bg-[#5151EB] px-8 py-8 text-white shadow-lg transition-transform hover:scale-105 disabled:opacity-50"
               disabled={isUploading}
             >
+               {/* audioUrlの状態に応じてテキストを切り替えます */}
+
               {audioUrl ? 'Record again' : 'Start Recording'}
             </button>
           ) : (
@@ -192,12 +201,11 @@ export default function RecordPage() {
               maxLength={20}
               className="w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
             />
-            <button
-              onClick={() => playWithStereo(audioUrl)}
-              className="w-full rounded-md bg-blue-500 px-4 py-3 font-semibold text-white hover:bg-blue-400"
-            >
-              Play Stereo
-            </button>
+            <audio 
+              src={audioUrl} 
+              controls 
+              className="w-full" 
+            />
             <button
               onClick={handlePost}
               className="w-full rounded-md bg-[#D3FE3E] px-4 py-3 font-semibold text-black hover:bg-[#c2ef25] disabled:bg-gray-400"
@@ -211,3 +219,4 @@ export default function RecordPage() {
     </main>
   );
 }
+
