@@ -51,10 +51,30 @@ export default function RecordPage() {
       const gainNode = audioContext.createGain();
       gainNode.gain.setValueAtTime(2.0, audioContext.currentTime);
 
+ // --- ここからが新しいステレオ修正のコード ---
+
+      // チャンネルを分割するノードを作成
+      const splitter = audioContext.createChannelSplitter(2);
+      // チャンネルを結合するノードを作成
+
+      const merger = audioContext.createChannelMerger(2);
+
+      // マイク入力 -> 音量ツマミ -> 分割ノード と接続
+
+      source.connect(gainNode);
+      gainNode.connect(splitter);
+
+      // 左チャンネル(0)の出力を、結合ノードの左(0)と右(1)の両方の入力に接続
+      // これにより、モノラル音声が両耳から聞こえるようになります
+
+      splitter.connect(merger, 0, 0);
+      splitter.connect(merger, 0, 1);
+
+      // --- 修正ここまで ---
+
       const destination = audioContext.createMediaStreamDestination();
       
-      source.connect(gainNode);
-      gainNode.connect(destination);
+      merger.connect(destination); // 結合された音声を録音の出力先として設定
       
       const supportedMimeTypes = ['audio/mp4', 'audio/webm'];
       const supportedType = supportedMimeTypes.find(type => MediaRecorder.isTypeSupported(type));
