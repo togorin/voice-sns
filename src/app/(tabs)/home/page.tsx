@@ -39,35 +39,35 @@ const TimeAgo = ({ date }: { date: string }) => {
       const seconds = Math.floor((now.getTime() - past.getTime()) / 1000);
            let interval = seconds / 31536000;
       if (interval > 1) {
-        setTimeAgo(Math.floor(interval) + " year(s) ago");
+        setTimeAgo(Math.floor(interval) + " years ago");
         return;
       }
       interval = seconds / 2592000;
       if (interval > 1) {
-        setTimeAgo(Math.floor(interval) + " month(s) ago");
+        setTimeAgo(Math.floor(interval) + " months ago");
         return;
       }
       interval = seconds / 604800;
       if (interval > 1) {
-        setTimeAgo(Math.floor(interval) + " week(s) ago");
+        setTimeAgo(Math.floor(interval) + " weeks ago");
         return;
       }
       interval = seconds / 86400;
       if (interval > 1) {
-        setTimeAgo(Math.floor(interval) + " day(s) ago");
+        setTimeAgo(Math.floor(interval) + " days ago");
         return;
       }
       interval = seconds / 3600;
       if (interval > 1) {
-        setTimeAgo(Math.floor(interval) + " hour(s) ago");
+        setTimeAgo(Math.floor(interval) + " hours ago");
         return;
       }
       interval = seconds / 60;
       if (interval > 1) {
-        setTimeAgo(Math.floor(interval) + " minute(s) ago");
+        setTimeAgo(Math.floor(interval) + " minutes ago");
         return;
       }
-       setTimeAgo(Math.floor(seconds) + " second(s) ago");
+       setTimeAgo(Math.floor(seconds) + " seconds ago");
     };
 
      calculateTimeAgo();
