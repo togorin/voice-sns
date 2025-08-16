@@ -18,27 +18,63 @@ type Post = {
   likes: Like[];
 };
 
-// Countdownコンポーネントも再利用
-const Countdown = ({ createdAt }: { createdAt: string }) => {
-  const [timeLeft, setTimeLeft] = useState('');
+// TimeAgoコンポーネント
+const TimeAgo = ({ date }: { date: string }) => {
+  const [timeAgo, setTimeAgo] = useState('');
+
   useEffect(() => {
-    const calculateTimeLeft = () => {
-      const expirationTime = new Date(createdAt).getTime() + 24 * 60 * 60 * 1000;
-      const now = new Date().getTime();
-      const difference = expirationTime - now;
-      if (difference > 0) {
-        const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
-        const minutes = Math.floor((difference / 1000 / 60) % 60);
-        setTimeLeft(`${hours}h ${minutes}m left`);
-      } else {
-        setTimeLeft('Expired');
+    const calculateTimeAgo = () => {
+      const now = new Date();
+      const past = new Date(date);
+      const seconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+      let interval = seconds / 31536000;
+
+      if (interval >= 1) {
+        const years = Math.floor(interval);
+        setTimeAgo(years === 1 ? "last year" : years + " years ago");
+        return;
       }
+      interval = seconds / 2592000;
+      if (interval >= 1) {
+        const months = Math.floor(interval);
+        setTimeAgo(months === 1 ? "last month" : months + " months ago");
+        return;
+      }
+      interval = seconds / 604800;
+      if (interval >= 1) {
+        const weeks = Math.floor(interval);
+        setTimeAgo(weeks === 1 ? "last week" : weeks + " weeks ago");
+        return;
+      }
+      interval = seconds / 86400;
+      if (interval >= 1) {
+        const days = Math.floor(interval);
+        setTimeAgo(days === 1 ? "yesterday" : days + " days ago");
+        return;
+      }
+      interval = seconds / 3600;
+      if (interval >= 1) {
+        const hours = Math.floor(interval);
+        setTimeAgo(hours + (hours === 1 ? " hour ago" : " hours ago"));
+        return;
+      }
+      interval = seconds / 60;
+      if (interval >= 1) {
+        const minutes = Math.floor(interval);
+        setTimeAgo(minutes + (minutes === 1 ? " minute ago" : " minutes ago"));
+        return;
+      }
+      setTimeAgo(Math.floor(seconds) + (seconds === 1 ? " second ago" : " seconds ago"));
     };
-    calculateTimeLeft();
-    const interval = setInterval(calculateTimeLeft, 60000);
-    return () => clearInterval(interval);
-  }, [createdAt]);
-  return <p className="text-xs text-gray-500">{timeLeft}</p>;
+
+    calculateTimeAgo();
+    // 1分ごとに更新
+    const timer = setInterval(calculateTimeAgo, 60000);
+
+    return () => clearInterval(timer);
+  }, [date]);
+
+  return <p className="text-xs text-gray-500">{timeAgo}</p>;
 };
 
 export default function PostPage() {
@@ -85,11 +121,8 @@ export default function PostPage() {
     if (!currentUser) {
 
       alert('Hop in — log in or sign up to post & like!\nポストやいいねをするにはログインしてね！');
-
       return false;
-
     }
-
     return true;
 
   };
@@ -97,11 +130,8 @@ export default function PostPage() {
 
 
   const handleLike = async () => {
-
     if (!handleProtectedAction() || !post) return;
-
     setPost({ ...post, likes: [...post.likes, { user_id: currentUser!.id }] });
-
     await supabase.from('likes').insert({ post_id: postId, user_id: currentUser!.id });
 
   };
@@ -111,11 +141,8 @@ export default function PostPage() {
   const handleUnlike = async () => {
 
     if (!handleProtectedAction() || !post) return;
-
     setPost({ ...post, likes: post.likes.filter(like => like.user_id !== currentUser!.id) });
-
     await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', currentUser!.id);
-
   };
 
  // シェア処理を追加
@@ -179,7 +206,7 @@ export default function PostPage() {
                   <Link href={`/profile/${post.user_id}`} className="hover:underline">
                     <p className="text-sm font-semibold text-gray-100">{post.profiles?.username || 'Unknown User'}</p>
                   </Link>
-                  <Countdown createdAt={post.created_at} />
+                  <TimeAgo date={post.created_at} />
                 </div>
               </div>
             </div>
