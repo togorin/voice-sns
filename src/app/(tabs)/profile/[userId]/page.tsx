@@ -21,52 +21,81 @@ type Post = {
   likes: Like[]; // likesを追加
 };
 
-// ホーム画面からTimeAgoコンポーネントをコピー
+// TimeAgoコンポーネント
 const TimeAgo = ({ date }: { date: string }) => {
   const [timeAgo, setTimeAgo] = useState('');
+
   useEffect(() => {
     const calculateTimeAgo = () => {
       const now = new Date();
       const past = new Date(date);
       const seconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+
+      const days = Math.floor(seconds / 86400);
+      const weeks = Math.floor(seconds / 604800);
+      const months = Math.floor(seconds / 2592000);
+
+      if (days === 1) {
+        setTimeAgo("yesterday");
+        return;
+      }
+      if (weeks === 1) {
+        setTimeAgo("last week");
+        return;
+      }
+      if (months === 1) {
+        setTimeAgo("last month");
+        return;
+      }
+
+      // fallback: 通常の "X time ago"
       let interval = seconds / 31536000;
-      if (interval > 1) {
-        setTimeAgo(Math.floor(interval) + " year(s) ago");
+      if (interval >= 1) {
+        const years = Math.floor(interval);
+        setTimeAgo(years === 1 ? "1 year ago" : years + " years ago");
         return;
       }
       interval = seconds / 2592000;
-      if (interval > 1) {
-        setTimeAgo(Math.floor(interval) + " month(s) ago");
+      if (interval >= 1) {
+        const m = Math.floor(interval);
+        setTimeAgo(m === 1 ? "1 month ago" : m + " months ago");
         return;
       }
       interval = seconds / 604800;
-      if (interval > 1) {
-        setTimeAgo(Math.floor(interval) + " week(s) ago");
+      if (interval >= 1) {
+        const w = Math.floor(interval);
+        setTimeAgo(w === 1 ? "1 week ago" : w + " weeks ago");
         return;
       }
       interval = seconds / 86400;
-      if (interval > 1) {
-        setTimeAgo(Math.floor(interval) + " day(s) ago");
+      if (interval >= 1) {
+        const d = Math.floor(interval);
+        setTimeAgo(d === 1 ? "1 day ago" : d + " days ago");
         return;
       }
       interval = seconds / 3600;
-      if (interval > 1) {
-        setTimeAgo(Math.floor(interval) + " hour(s) ago");
+      if (interval >= 1) {
+        const h = Math.floor(interval);
+        setTimeAgo(h === 1 ? "1 hour ago" : h + " hours ago");
         return;
       }
       interval = seconds / 60;
-      if (interval > 1) {
-        setTimeAgo(Math.floor(interval) + " minute(s) ago");
+      if (interval >= 1) {
+        const min = Math.floor(interval);
+        setTimeAgo(min === 1 ? "1 minute ago" : min + " minutes ago");
         return;
       }
-      setTimeAgo(Math.floor(seconds) + " second(s) ago");
+      setTimeAgo(seconds <= 1 ? "just now" : seconds + " seconds ago");
     };
     calculateTimeAgo();
     const timer = setInterval(calculateTimeAgo, 60000);
+
     return () => clearInterval(timer);
   }, [date]);
-  return <p className="mb-3 text-xs text-gray-500">{timeAgo}</p>;
+
+  return <p className="text-xs text-gray-500">{timeAgo}</p>;
 };
+
 
 export default function ProfilePage() {
   const params = useParams();
