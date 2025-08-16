@@ -6,9 +6,12 @@ export default function TabsLayout({
   children: React.ReactNode;
 }) {
   return (
-    // このdivに min-h-dvh を追加して、常に画面の高さいっぱいに広がるようにします
-    <div className="min-h-dvh">
-      {children}
+    // min-h-dvhとflexboxを使って、レイアウト全体を画面の高さに合わせます
+    <div className="relative flex min-h-dvh flex-col">
+      {/* flex-growクラスを追加して、この部分が利用可能なすべてのスペースを埋めるようにします */}
+      <div className="flex-grow">
+        {children}
+      </div>
       <TabBar />
     </div>
   );

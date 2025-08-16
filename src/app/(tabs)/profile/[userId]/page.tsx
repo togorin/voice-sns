@@ -240,7 +240,7 @@ export default function ProfilePage() {
   };
 
   return (
-      <main className="min-h-dvh bg-gray-900 pb-24">
+      <main className="bg-gray-900 pb-24">
 
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-700 bg-gray-800 p-4">
 
