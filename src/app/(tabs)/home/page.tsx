@@ -93,10 +93,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const router = useRouter();
-  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const sourceRef = useRef<AudioBufferSourceNode | null>(null);
-  const audioRefs = useRef<Map<string, HTMLAudioElement>>(new Map()); // ← 追加
+  const audioRefs = useRef<Map<string, HTMLAudioElement | null>>(new Map());
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -150,43 +147,14 @@ export default function HomePage() {
     await supabase.from('posts').delete().eq('id', post.id);
   };
 
-  const handlePlay = async (post: Post) => {
+  
 
-    if (sourceRef.current) {
-      sourceRef.current.stop();
-    }
-    if (currentlyPlaying === post.id) {
-      setCurrentlyPlaying(null);
-      return;
-    }
-    setCurrentlyPlaying(post.id);
-
-    try {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      audioContextRef.current = audioContext;
-
-      const response = await fetch(post.audio_url);
-      const arrayBuffer = await response.arrayBuffer();
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-      const source = audioContext.createBufferSource();
-      source.buffer = audioBuffer;
-      sourceRef.current = source;
-
-      if (audioBuffer.numberOfChannels === 1) {
-        const merger = audioContext.createChannelMerger(2);
-        source.connect(merger);
-        merger.connect(audioContext.destination);
-      } else {
-        source.connect(audioContext.destination);
+  const handlePlay = (postId: string) => {
+    audioRefs.current.forEach((audioEl, id) => {
+      if (id !== postId && audioEl) {
+        audioEl.pause();
       }
-      source.onended = () => {
-        setCurrentlyPlaying(null);
-      };
-      source.start();
-    } catch (error) {
-      console.error("Error playing audio:", error);
-      setCurrentlyPlaying(null);
-    }
+     });  
   };
 
   const handleShare = (post: Post) => {
@@ -219,7 +187,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-md space-y-6">
           {posts.map((post) => {
             const userHasLiked = currentUser ? post.likes.some(like => like.user_id === currentUser.id) : false;
-            const isPlaying = currentlyPlaying === post.id;
+          
             return (
               // Linkコンポーネントを削除し、代わりにonClickでページ遷移するdivに変更
               <div 
@@ -257,7 +225,7 @@ export default function HomePage() {
                     controls 
                     controlsList="nodownload" 
                     ref={(el) => { if (el) audioRefs.current.set(post.id, el); }}
-                    onPlay={() => handlePlay(post)}  
+                     onPlay={() => handlePlay(post.id)} // onPlayで呼び出す関数を修正 
                     className="w-full" 
                   />
 
