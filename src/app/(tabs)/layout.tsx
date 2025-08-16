@@ -6,7 +6,8 @@ export default function TabsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div>
+    // このdivに min-h-dvh を追加して、常に画面の高さいっぱいに広がるようにします
+    <div className="min-h-dvh">
       {children}
       <TabBar />
     </div>
