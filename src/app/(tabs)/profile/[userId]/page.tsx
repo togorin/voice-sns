@@ -106,7 +106,7 @@ export default function ProfilePage() {
 
       const { data: postData } = await supabase
         .from('posts')
-        .select('id, created_at, audio_url, title')
+        .select('id, created_at, audio_url, title , likes(*)')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
       if (postData) setPosts(postData as Post[]);
@@ -202,7 +202,6 @@ export default function ProfilePage() {
     if (navigator.share) {
       navigator.share({
         title: `stew post by ${profile?.username || 'a user'}`,
-        text: post.title || 'Listen to this voice memo on stew!',
         url: postUrl,
       }).catch((error) => console.log('Error sharing', error));
     } else {
