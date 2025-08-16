@@ -166,7 +166,7 @@ export default function PostPage() {
   const userHasLiked = currentUser && post ? post.likes.some(like => like.user_id === currentUser.id) : false;
 
   return (
-   <main className="min-h-screen bg-gray-900 pb-24">
+   <main className="min-h-dvh bg-gray-900 pb-24">
 
       {/* ヘッダーをホーム画面と同じデザインに変更 */}
 

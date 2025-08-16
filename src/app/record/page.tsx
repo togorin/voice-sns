@@ -160,7 +160,7 @@ export default function RecordPage() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gray-900 p-4">
+    <main className="flex min-h-dvh flex-col items-center justify-center bg-gray-900 p-4">
          {/* 戻るボタンを追加 */}
       <Link href="/home" className="absolute top-4 left-4 text-[#D3FE3E] hover:text-[#c2ef25]">
         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
