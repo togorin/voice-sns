@@ -363,7 +363,7 @@ export default function ProfilePage() {
                     )}
                   </div>
                   {post.title && (
-                    <p className="mt-2 text-sm text-white">{post.title}</p>
+                    <p className="mt-2 mb-3 text-sm text-white">{post.title}</p>
                   )}
                   <audio src={post.audio_url} controls className="w-full" />
                   <div className="mt-4 flex items-center gap-4">
