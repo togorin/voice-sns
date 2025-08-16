@@ -37,48 +37,56 @@ const TimeAgo = ({ date }: { date: string }) => {
       const now = new Date();
       const past = new Date(date);
       const seconds = Math.floor((now.getTime() - past.getTime()) / 1000);
-           let interval = seconds / 31536000;
-      if (interval > 1) {
-        setTimeAgo(Math.floor(interval) + " years ago");
+      let interval = seconds / 31536000;
+
+      if (interval >= 1) {
+        const years = Math.floor(interval);
+        setTimeAgo(years === 1 ? "last year" : years + " years ago");
         return;
       }
       interval = seconds / 2592000;
-      if (interval > 1) {
-        setTimeAgo(Math.floor(interval) + " months ago");
+      if (interval >= 1) {
+        const months = Math.floor(interval);
+        setTimeAgo(months === 1 ? "last month" : months + " months ago");
         return;
       }
       interval = seconds / 604800;
-      if (interval > 1) {
-        setTimeAgo(Math.floor(interval) + " weeks ago");
+      if (interval >= 1) {
+        const weeks = Math.floor(interval);
+        setTimeAgo(weeks === 1 ? "last week" : weeks + " weeks ago");
         return;
       }
       interval = seconds / 86400;
-      if (interval > 1) {
-        setTimeAgo(Math.floor(interval) + " days ago");
+      if (interval >= 1) {
+        const days = Math.floor(interval);
+        setTimeAgo(days === 1 ? "yesterday" : days + " days ago");
         return;
       }
       interval = seconds / 3600;
-      if (interval > 1) {
-        setTimeAgo(Math.floor(interval) + " hours ago");
+      if (interval >= 1) {
+        const hours = Math.floor(interval);
+        setTimeAgo(hours + (hours === 1 ? " hour ago" : " hours ago"));
         return;
       }
       interval = seconds / 60;
-      if (interval > 1) {
-        setTimeAgo(Math.floor(interval) + " minutes ago");
+      if (interval >= 1) {
+        const minutes = Math.floor(interval);
+        setTimeAgo(minutes + (minutes === 1 ? " minute ago" : " minutes ago"));
         return;
       }
-       setTimeAgo(Math.floor(seconds) + " seconds ago");
+      setTimeAgo(Math.floor(seconds) + (seconds === 1 ? " second ago" : " seconds ago"));
     };
 
-     calculateTimeAgo();
+    calculateTimeAgo();
     // 1分ごとに更新
     const timer = setInterval(calculateTimeAgo, 60000);
 
-     return () => clearInterval(timer);
+    return () => clearInterval(timer);
   }, [date]);
 
- return <p className="text-xs text-gray-500">{timeAgo}</p>;
+  return <p className="text-xs text-gray-500">{timeAgo}</p>;
 };
+
 
 export default function HomePage() {
   const [posts, setPosts] = useState<Post[]>([]);
