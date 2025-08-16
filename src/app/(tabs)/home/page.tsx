@@ -6,10 +6,16 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
+// TypeScriptに、windowオブジェクトがwebkitAudioContextを持つ可能性を伝えます
+declare global {
+  interface Window {
+    webkitAudioContext: typeof AudioContext
+  }
+}
+
+
 // 型定義
-type Like = {
-  user_id: string;
-};
+type Like = {user_id: string;};
 
 type Post = {
   id: string;
@@ -17,48 +23,72 @@ type Post = {
   audio_url: string;
   user_id: string;
   title: string | null;
-  profiles: {
-    username: string;
-    avatar_url: string | null;
-  } | null;
+  profiles: { username: string;
+    avatar_url: string | null;} | null;
   likes: Like[];
 };
 
-// カウントダウン表示用のコンポーネント
-const Countdown = ({ createdAt }: { createdAt: string }) => {
-  const [timeLeft, setTimeLeft] = useState('');
+// TimeAgoコンポーネント
+const TimeAgo = ({ date }: { date: string }) => {
+  const [timeAgo, setTimeAgo] = useState('');
 
   useEffect(() => {
-    const calculateTimeLeft = () => {
-      const expirationTime = new Date(createdAt).getTime() + 24 * 60 * 60 * 1000;
-      const now = new Date().getTime();
-      const difference = expirationTime - now;
-
-      if (difference > 0) {
-        const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
-        const minutes = Math.floor((difference / 1000 / 60) % 60);
-        setTimeLeft(`${hours}h ${minutes}m left`);
-      } else {
-        setTimeLeft('Expired');
+    const calculateTimeAgo = () => {
+      const now = new Date();
+      const past = new Date(date);
+      const seconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+           let interval = seconds / 31536000;
+      if (interval > 1) {
+        setTimeAgo(Math.floor(interval) + " year(s) ago");
+        return;
       }
+      interval = seconds / 2592000;
+      if (interval > 1) {
+        setTimeAgo(Math.floor(interval) + " month(s) ago");
+        return;
+      }
+      interval = seconds / 604800;
+      if (interval > 1) {
+        setTimeAgo(Math.floor(interval) + " week(s) ago");
+        return;
+      }
+      interval = seconds / 86400;
+      if (interval > 1) {
+        setTimeAgo(Math.floor(interval) + " day(s) ago");
+        return;
+      }
+      interval = seconds / 3600;
+      if (interval > 1) {
+        setTimeAgo(Math.floor(interval) + " hour(s) ago");
+        return;
+      }
+      interval = seconds / 60;
+      if (interval > 1) {
+        setTimeAgo(Math.floor(interval) + " minute(s) ago");
+        return;
+      }
+       setTimeAgo(Math.floor(seconds) + " second(s) ago");
     };
 
-    calculateTimeLeft();
-    const interval = setInterval(calculateTimeLeft, 60000);
+     calculateTimeAgo();
+    // 1分ごとに更新
+    const timer = setInterval(calculateTimeAgo, 60000);
 
-    return () => clearInterval(interval);
-  }, [createdAt]);
+     return () => clearInterval(timer);
+  }, [date]);
 
-  return <p className="text-xs text-gray-500">{timeLeft}</p>;
+ return <p className="text-xs text-gray-500">{timeAgo}</p>;
 };
-
 
 export default function HomePage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const router = useRouter();
-  const audioRefs = useRef<Map<string, HTMLAudioElement | null>>(new Map());
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const sourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const audioRefs = useRef<Map<string, HTMLAudioElement>>(new Map()); // ← 追加
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -71,9 +101,10 @@ export default function HomePage() {
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUser(user);
       
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      
-      const { data, error } = await supabase.from('posts').select(`*, title, profiles (username, avatar_url), likes (*)`).gte('created_at', twentyFourHoursAgo).order('created_at', { ascending: false });
+       // 24時間で絞り込むロジックを削除しました
+
+      const { data, error } = await supabase.from('posts').select(`*, title, profiles (username, avatar_url), likes (*)`).order('created_at', { ascending: false });
+
       
       if (!error) setPosts(data as Post[]);
       setLoading(false);
@@ -101,7 +132,7 @@ export default function HomePage() {
   };
 
   const handleDelete = async (post: Post) => {
-    if (!currentUser || currentUser.id !== post.user_id) return;
+      if (!handleProtectedAction() || currentUser!.id !== post.user_id) return;
     if (!confirm('Are you sure you want to delete this post?')) return;
     
     setPosts(posts.filter(p => p.id !== post.id));
@@ -111,12 +142,43 @@ export default function HomePage() {
     await supabase.from('posts').delete().eq('id', post.id);
   };
 
-  const handlePlay = (postId: string) => {
-    audioRefs.current.forEach((audioEl, id) => {
-      if (id !== postId && audioEl) {
-        audioEl.pause();
+  const handlePlay = async (post: Post) => {
+
+    if (sourceRef.current) {
+      sourceRef.current.stop();
+    }
+    if (currentlyPlaying === post.id) {
+      setCurrentlyPlaying(null);
+      return;
+    }
+    setCurrentlyPlaying(post.id);
+
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      audioContextRef.current = audioContext;
+
+      const response = await fetch(post.audio_url);
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      const source = audioContext.createBufferSource();
+      source.buffer = audioBuffer;
+      sourceRef.current = source;
+
+      if (audioBuffer.numberOfChannels === 1) {
+        const merger = audioContext.createChannelMerger(2);
+        source.connect(merger);
+        merger.connect(audioContext.destination);
+      } else {
+        source.connect(audioContext.destination);
       }
-    });
+      source.onended = () => {
+        setCurrentlyPlaying(null);
+      };
+      source.start();
+    } catch (error) {
+      console.error("Error playing audio:", error);
+      setCurrentlyPlaying(null);
+    }
   };
 
   const handleShare = (post: Post) => {
@@ -139,13 +201,8 @@ export default function HomePage() {
         <div className="w-1/3"></div>
         <h1 className="font-unbounded w-1/3 text-center text-3xl font-bold text-white">stew</h1>
         <div className="flex w-1/3 justify-end">
-          {loading ? (
-            <div className="h-[30px] w-[76px]"></div>
-          ) : currentUser ? (
-            <button onClick={handleLogout} className="rounded-md bg-gray-700 px-4 py-1.5 text-sm font-semibold text-gray-200 hover:bg-gray-600">Logout</button>
-          ) : (
-            <Link href="/" className="rounded-md bg-[#D3FE3E] px-4 py-1.5 text-sm font-semibold text-black hover:bg-[#c2ef25]">Login</Link>
-          )}
+           {loading ? <div className="h-[30px] w-[76px]"></div> : currentUser ? <button onClick={handleLogout} className="rounded-md bg-gray-700 px-4 py-1.5 text-sm font-semibold text-gray-200 hover:bg-gray-600">Logout</button> : <Link href="/" className="rounded-md bg-[#D3FE3E] px-4 py-1.5 text-sm font-semibold text-black hover:bg-[#c2ef25]">Login</Link>}
+      
         </div>
       </header>
       <div className="p-4">
@@ -154,6 +211,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-md space-y-6">
           {posts.map((post) => {
             const userHasLiked = currentUser ? post.likes.some(like => like.user_id === currentUser.id) : false;
+            const isPlaying = currentlyPlaying === post.id;
             return (
               // Linkコンポーネントを削除し、代わりにonClickでページ遷移するdivに変更
               <div 
@@ -170,12 +228,12 @@ export default function HomePage() {
                       <Link href={`/profile/${post.user_id}`} onClick={(e) => e.stopPropagation()} className="hover:underline">
                         <p className="text-sm font-semibold text-gray-100">{post.profiles?.username || 'Unknown User'}</p>
                       </Link>
-                      <Countdown createdAt={post.created_at} />
+                      <TimeAgo date={post.created_at} />
                     </div>
                   </div>
                   {currentUser?.id === post.user_id && (
                     <button onClick={(e) => { e.stopPropagation(); handleDelete(post); }} className="text-gray-500 hover:text-white">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" /></svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" /></svg>
                     </button>
                   )}
                 </div>
@@ -190,8 +248,8 @@ export default function HomePage() {
                     src={post.audio_url} 
                     controls 
                     controlsList="nodownload" 
-                    ref={(el) => { audioRefs.current.set(post.id, el); }}
-                    onPlay={() => handlePlay(post.id)}
+                    ref={(el) => { if (el) audioRefs.current.set(post.id, el); }}
+                    onPlay={() => handlePlay(post)}  
                     className="w-full" 
                   />
 
@@ -200,7 +258,7 @@ export default function HomePage() {
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={`h-6 w-6 transition-colors ${userHasLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-400'}`}><path fillRule="evenodd" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" clipRule="evenodd" /></svg>
                       <span className="text-sm text-gray-400">{post.likes.length}</span>
                     </button>
-                    <button onClick={(e) => handleShare(post)} className="text-gray-500 hover:text-white">
+                    <button onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleShare(post); }} className="text-gray-500 hover:text-white">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <polyline points="15 14 20 9 15 4"></polyline><path d="M4 20v-7a4 4 0 0 1 4-4h12"></path>
                       </svg>
