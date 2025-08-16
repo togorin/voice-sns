@@ -21,27 +21,51 @@ type Post = {
   likes: Like[]; // likesを追加
 };
 
-// カウントダウン表示用のコンポーネント
-const Countdown = ({ createdAt }: { createdAt: string }) => {
-  const [timeLeft, setTimeLeft] = useState('');
+// ホーム画面からTimeAgoコンポーネントをコピー
+const TimeAgo = ({ date }: { date: string }) => {
+  const [timeAgo, setTimeAgo] = useState('');
   useEffect(() => {
-    const calculateTimeLeft = () => {
-      const expirationTime = new Date(createdAt).getTime() + 24 * 60 * 60 * 1000;
-      const now = new Date().getTime();
-      const difference = expirationTime - now;
-      if (difference > 0) {
-        const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
-        const minutes = Math.floor((difference / 1000 / 60) % 60);
-        setTimeLeft(`${hours}h ${minutes}m left`);
-      } else {
-        setTimeLeft('Expired');
+    const calculateTimeAgo = () => {
+      const now = new Date();
+      const past = new Date(date);
+      const seconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+      let interval = seconds / 31536000;
+      if (interval > 1) {
+        setTimeAgo(Math.floor(interval) + " year(s) ago");
+        return;
       }
+      interval = seconds / 2592000;
+      if (interval > 1) {
+        setTimeAgo(Math.floor(interval) + " month(s) ago");
+        return;
+      }
+      interval = seconds / 604800;
+      if (interval > 1) {
+        setTimeAgo(Math.floor(interval) + " week(s) ago");
+        return;
+      }
+      interval = seconds / 86400;
+      if (interval > 1) {
+        setTimeAgo(Math.floor(interval) + " day(s) ago");
+        return;
+      }
+      interval = seconds / 3600;
+      if (interval > 1) {
+        setTimeAgo(Math.floor(interval) + " hour(s) ago");
+        return;
+      }
+      interval = seconds / 60;
+      if (interval > 1) {
+        setTimeAgo(Math.floor(interval) + " minute(s) ago");
+        return;
+      }
+      setTimeAgo(Math.floor(seconds) + " second(s) ago");
     };
-    calculateTimeLeft();
-    const interval = setInterval(calculateTimeLeft, 60000);
-    return () => clearInterval(interval);
-  }, [createdAt]);
-  return <p className="mb-3 text-xs text-gray-500">{timeLeft}</p>;
+    calculateTimeAgo();
+    const timer = setInterval(calculateTimeAgo, 60000);
+    return () => clearInterval(timer);
+  }, [date]);
+  return <p className="mb-3 text-xs text-gray-500">{timeAgo}</p>;
 };
 
 export default function ProfilePage() {
@@ -78,16 +102,14 @@ export default function ProfilePage() {
         setUsernameText(profileData.username || '');
       }
 
-      const postQuery = supabase.from('posts').select('id, created_at, audio_url, title, likes(*)').eq('user_id', userId);
+       // 24時間制限を削除し、すべての投稿を取得するように変更
 
-      if (user?.id !== userId) {
-        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-        postQuery.gte('created_at', twentyFourHoursAgo);
-      }
-      
-      const { data: postData } = await postQuery.order('created_at', { ascending: false });
+      const { data: postData } = await supabase
+        .from('posts')
+        .select('id, created_at, audio_url, title')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
       if (postData) setPosts(postData as Post[]);
-
       if (user) {
         const { data: followData } = await supabase.from('follows').select('*').eq('follower_id', user.id).eq('following_id', userId).single();
         setIsFollowing(!!followData);
@@ -305,7 +327,7 @@ export default function ProfilePage() {
               return (
                 <div key={post.id} className="rounded-lg bg-gray-800 p-5 shadow-lg">
                   <div className="flex items-center justify-between">
-                    <Countdown createdAt={post.created_at} />
+                    <TimeAgo date={post.created_at} />
                     {currentUser?.id === userId && (
                       <button onClick={() => handleDelete(post)} className="text-gray-500 hover:text-red-500">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" /></svg>
