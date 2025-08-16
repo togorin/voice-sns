@@ -348,7 +348,7 @@ export default function ProfilePage() {
 
         {/* Posts List */}
         <div className="mt-8">
-          <h2 className="mb-4 text-xl font-bold text-white">Posts</h2>
+          <h2 className="mb-4 mt-2 text-xl font-bold text-white">Posts</h2>
           <div className="space-y-6">
             {posts.length > 0 ? posts.map((post) => {
               const userHasLiked = currentUser ? post.likes.some(like => like.user_id === currentUser.id) : false;
