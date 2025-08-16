@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 // Single_Dayの代わりにUnboundedをインポートします
 import { Inter, Unbounded } from "next/font/google";
 import "./globals.css";
+import ViewportHeightManager from "@/components/ViewportHeightManager"; // 新しいコンポーネントをインポート
 
 const inter = Inter({ subsets: ["latin"], variable: '--font-inter' });
 // Unboundedフォントを読み込みます
@@ -24,7 +25,10 @@ export default function RootLayout({
   return (
     // htmlタグのclassNameに、新しいフォント変数を適用します
     <html lang="en" className={`${inter.variable} ${unbounded.variable}`}>
-      <body>{children}</body>
+       <body>
+        <ViewportHeightManager /> {/* この行を追加 */}
+        {children}
+      </body>
     </html>
   );
 }

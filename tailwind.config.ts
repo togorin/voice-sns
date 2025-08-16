@@ -13,6 +13,10 @@ const config: Config = {
         // parkinsansをunboundedに変更します
         unbounded: ['var(--font-unbounded)'],
       },
+      // minHeightを拡張して、dvhを上書きします
+      minHeight: {
+        'dvh': 'calc(var(--vh, 1vh) * 100)',
+      },
     },
   },
   plugins: [],
