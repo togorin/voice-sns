@@ -44,32 +44,30 @@ export default function TabBar() {
   const isProfilePage = currentUser ? pathname.startsWith(`/profile/${currentUser.id}`) : false;
 
   return (
-    // この外側のdivが、画面下部に固定されるコンテナになります
-    <div className="fixed bottom-0 left-0 right-0 z-10">
+    // navタグが画面幅いっぱいに広がるように修正
+    <nav className="fixed bottom-0 left-0 right-0 z-10 border-t border-gray-700 bg-gray-800">
       {/* この内側のdivが、コンテンツ幅の中央揃えコンテナとなり、ボタンの位置の基準点(relative)になります */}
       <div className="relative mx-auto max-w-md">
-        <nav className="border-t border-gray-700 bg-gray-800">
-          <div className="flex h-16 items-center justify-between px-6">
-            <Link href="/home" className={isHomePage ? 'text-white' : 'text-gray-400 hover:text-white'}>
-              {isHomePage ? <HomeIconFilled /> : <HomeIcon />}
-            </Link>
-            
-            <Link href="/search" className={isSearchPage ? 'text-white' : 'text-gray-400 hover:text-white'}>
-              {isSearchPage ? <SearchIconFilled /> : <SearchIcon />}
-            </Link>
+        <div className="flex h-16 items-center justify-between px-6">
+          <Link href="/home" className={isHomePage ? 'text-white' : 'text-gray-400 hover:text-white'}>
+            {isHomePage ? <HomeIconFilled /> : <HomeIcon />}
+          </Link>
+          
+          <Link href="/search" className={isSearchPage ? 'text-white' : 'text-gray-400 hover:text-white'}>
+            {isSearchPage ? <SearchIconFilled /> : <SearchIcon />}
+          </Link>
 
-            {currentUser ? (
-              <Link href={`/profile/${currentUser.id}`} className={isProfilePage ? 'text-white' : 'text-gray-400 hover:text-white'}>
-                {isProfilePage ? <ProfileIconFilled /> : <ProfileIcon />}
-              </Link>
-            ) : (
-              <button onClick={handleRecordClick} className="text-gray-400 hover:text-white">
-                <ProfileIcon />
-              </button>
-            )}
-            <div className="w-16"></div> 
-          </div>
-        </nav>
+          {currentUser ? (
+            <Link href={`/profile/${currentUser.id}`} className={isProfilePage ? 'text-white' : 'text-gray-400 hover:text-white'}>
+              {isProfilePage ? <ProfileIconFilled /> : <ProfileIcon />}
+            </Link>
+          ) : (
+            <button onClick={handleRecordClick} className="text-gray-400 hover:text-white">
+              <ProfileIcon />
+            </button>
+          )}
+          <div className="w-16"></div> 
+        </div>
         
         <button 
           onClick={handleRecordClick}
@@ -78,6 +76,6 @@ export default function TabBar() {
           <RecordIcon />
         </button>
       </div>
-    </div>
+    </nav>
   );
 }
