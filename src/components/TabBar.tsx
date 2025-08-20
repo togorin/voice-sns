@@ -44,37 +44,40 @@ export default function TabBar() {
   const isProfilePage = currentUser ? pathname.startsWith(`/profile/${currentUser.id}`) : false;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-10 border-t border-gray-700 bg-gray-800">
-      {/* justify-around を justify-between に変更し、右側にスペースを確保 */}
-      <div className="mx-auto flex h-16 max-w-md items-center justify-between px-6">
-        <Link href="/home" className={isHomePage ? 'text-white' : 'text-gray-400 hover:text-white'}>
-          {isHomePage ? <HomeIconFilled /> : <HomeIcon />}
-        </Link>
-        
-        <Link href="/search" className={isSearchPage ? 'text-white' : 'text-gray-400 hover:text-white'}>
-          {isSearchPage ? <SearchIconFilled /> : <SearchIcon />}
-        </Link>
+    // この外側のdivが、画面下部に固定されるコンテナになります
+    <div className="fixed bottom-0 left-0 right-0 z-10">
+      {/* この内側のdivが、コンテンツ幅の中央揃えコンテナとなり、ボタンの位置の基準点(relative)になります */}
+      <div className="relative mx-auto max-w-md">
+        <nav className="border-t border-gray-700 bg-gray-800">
+          <div className="flex h-16 items-center justify-between px-6">
+            <Link href="/home" className={isHomePage ? 'text-white' : 'text-gray-400 hover:text-white'}>
+              {isHomePage ? <HomeIconFilled /> : <HomeIcon />}
+            </Link>
+            
+            <Link href="/search" className={isSearchPage ? 'text-white' : 'text-gray-400 hover:text-white'}>
+              {isSearchPage ? <SearchIconFilled /> : <SearchIcon />}
+            </Link>
 
-        {currentUser ? (
-          <Link href={`/profile/${currentUser.id}`} className={isProfilePage ? 'text-white' : 'text-gray-400 hover:text-white'}>
-            {isProfilePage ? <ProfileIconFilled /> : <ProfileIcon />}
-          </Link>
-        ) : (
-          <button onClick={handleRecordClick} className="text-gray-400 hover:text-white">
-            <ProfileIcon />
-          </button>
-        )}
-        {/* ダミーのdivを削除し、右側に録音ボタン用のスペースを確保 */}
-        <div className="w-16"></div> 
+            {currentUser ? (
+              <Link href={`/profile/${currentUser.id}`} className={isProfilePage ? 'text-white' : 'text-gray-400 hover:text-white'}>
+                {isProfilePage ? <ProfileIconFilled /> : <ProfileIcon />}
+              </Link>
+            ) : (
+              <button onClick={handleRecordClick} className="text-gray-400 hover:text-white">
+                <ProfileIcon />
+              </button>
+            )}
+            <div className="w-16"></div> 
+          </div>
+        </nav>
+        
+        <button 
+          onClick={handleRecordClick}
+          className="absolute right-6 top-0 -translate-y-[35%] flex h-20 w-20 items-center justify-center rounded-full bg-[#5151EB] text-white shadow-lg"
+        >
+          <RecordIcon />
+        </button>
       </div>
-      
-      <button 
-        onClick={handleRecordClick}
-        // left-1/2 -translate-x-1/2 を right-6 に変更して、右端に配置
-        className="absolute right-6 top-0 -translate-y-[35%] flex h-20 w-20 items-center justify-center rounded-full bg-[#5151EB] text-white shadow-lg"
-      >
-        <RecordIcon />
-      </button>
-    </nav>
+    </div>
   );
 }
