@@ -45,7 +45,8 @@ export default function TabBar() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-10 border-t border-gray-700 bg-gray-800">
-      <div className="mx-auto flex h-16 max-w-md items-center justify-around">
+      {/* justify-around を justify-between に変更し、右側にスペースを確保 */}
+      <div className="mx-auto flex h-16 max-w-md items-center justify-between px-6">
         <Link href="/home" className={isHomePage ? 'text-white' : 'text-gray-400 hover:text-white'}>
           {isHomePage ? <HomeIconFilled /> : <HomeIcon />}
         </Link>
@@ -53,8 +54,6 @@ export default function TabBar() {
         <Link href="/search" className={isSearchPage ? 'text-white' : 'text-gray-400 hover:text-white'}>
           {isSearchPage ? <SearchIconFilled /> : <SearchIcon />}
         </Link>
-
-        <div className="w-20"></div> 
 
         {currentUser ? (
           <Link href={`/profile/${currentUser.id}`} className={isProfilePage ? 'text-white' : 'text-gray-400 hover:text-white'}>
@@ -65,11 +64,14 @@ export default function TabBar() {
             <ProfileIcon />
           </button>
         )}
+        {/* ダミーのdivを削除し、右側に録音ボタン用のスペースを確保 */}
+        <div className="w-16"></div> 
       </div>
       
       <button 
         onClick={handleRecordClick}
-        className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-[35%] flex h-20 w-20 items-center justify-center rounded-full bg-[#5151EB] text-white shadow-lg"
+        // left-1/2 -translate-x-1/2 を right-6 に変更して、右端に配置
+        className="absolute right-6 top-0 -translate-y-[35%] flex h-20 w-20 items-center justify-center rounded-full bg-[#5151EB] text-white shadow-lg"
       >
         <RecordIcon />
       </button>
