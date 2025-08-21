@@ -133,19 +133,36 @@ export default function PostPage() {
     return true;
   };
 
-  const handlePostComment = async () => {
+ const handlePostComment = async () => {
     if (!handleProtectedAction() || !newComment.trim()) return;
 
-    const { data, error } = await supabase
+    // 1. コメントをデータベースに挿入
+    const { data: insertedComment, error: insertError } = await supabase
       .from('comments')
       .insert({ post_id: postId, user_id: currentUser!.id, content: newComment })
-      .select('*, profiles(username, avatar_url)')
+      .select('id') // 新しいコメントのIDのみを取得
       .single();
-    
-    if (error) {
-      console.error('Error posting comment:', error);
-    } else if (post && data) {
-      setPost({ ...post, comments: [...post.comments, data as Comment] });
+
+    if (insertError) {
+      console.error('Error inserting comment:', insertError);
+      return;
+    }
+
+    // 2. 挿入したコメントを、profiles情報を結合して取得
+    const { data: fetchedComment, error: fetchError } = await supabase
+      .from('comments')
+      .select('*, profiles(username, avatar_url)')
+      .eq('id', insertedComment.id)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching new comment:', fetchError);
+      return;
+    }
+
+    // 3. 取得した完全なコメントデータでステートを更新
+    if (post && fetchedComment) {
+      setPost({ ...post, comments: [...post.comments, fetchedComment as Comment] });
       setNewComment('');
     }
   };
