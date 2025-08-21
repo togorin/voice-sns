@@ -36,13 +36,44 @@ const TimeAgo = ({ date }: { date: string }) => {
       const past = new Date(date);
       const seconds = Math.floor((now.getTime() - past.getTime()) / 1000);
       let interval = seconds / 31536000;
-      if (interval > 1) setTimeAgo(Math.floor(interval) + " year(s) ago");
-      else if ((interval = seconds / 2592000) > 1) setTimeAgo(Math.floor(interval) + " month(s) ago");
-      else if ((interval = seconds / 604800) > 1) setTimeAgo(Math.floor(interval) + " week(s) ago");
-      else if ((interval = seconds / 86400) > 1) setTimeAgo(Math.floor(interval) + " day(s) ago");
-      else if ((interval = seconds / 3600) > 1) setTimeAgo(Math.floor(interval) + " hour(s) ago");
-      else if ((interval = seconds / 60) > 1) setTimeAgo(Math.floor(interval) + " minute(s) ago");
-      else setTimeAgo(Math.floor(seconds) + " second(s) ago");
+  
+
+      if (interval >= 1) {
+        const years = Math.floor(interval);
+        setTimeAgo(years === 1 ? "last year" : years + " years ago");
+        return;
+      }
+      interval = seconds / 2592000;
+      if (interval >= 1) {
+        const months = Math.floor(interval);
+        setTimeAgo(months === 1 ? "last month" : months + " months ago");
+        return;
+      }
+      interval = seconds / 604800;
+      if (interval >= 1) {
+        const weeks = Math.floor(interval);
+        setTimeAgo(weeks === 1 ? "last week" : weeks + " weeks ago");
+        return;
+      }
+      interval = seconds / 86400;
+      if (interval >= 1) {
+        const days = Math.floor(interval);
+        setTimeAgo(days === 1 ? "yesterday" : days + " days ago");
+        return;
+      }
+      interval = seconds / 3600;
+      if (interval >= 1) {
+        const hours = Math.floor(interval);
+        setTimeAgo(hours + (hours === 1 ? " hour ago" : " hours ago"));
+        return;
+      }
+      interval = seconds / 60;
+      if (interval >= 1) {
+        const minutes = Math.floor(interval);
+        setTimeAgo(minutes + (minutes === 1 ? " minute ago" : " minutes ago"));
+        return;
+      }
+      setTimeAgo(Math.floor(seconds) + (seconds === 1 ? " second ago" : " seconds ago"));
     };
     calculateTimeAgo();
     const timer = setInterval(calculateTimeAgo, 60000);
