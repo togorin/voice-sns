@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
-// Type Definitions
+// 型定義
 type Like = { user_id: string; };
 type Profile = { username: string; avatar_url: string | null; };
 type Comment = {
@@ -27,7 +27,7 @@ type Post = {
   comments: Comment[];
 };
 
-// TimeAgo Component
+// TimeAgoコンポーネント
 const TimeAgo = ({ date }: { date: string }) => {
   const [timeAgo, setTimeAgo] = useState('');
 
@@ -91,8 +91,8 @@ export default function PostPage() {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [newComment, setNewComment] = useState('');
   const router = useRouter();
+  const [newComment, setNewComment] = useState('');
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
