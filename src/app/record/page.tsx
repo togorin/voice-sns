@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -12,7 +12,13 @@ declare global {
     webkitAudioContext: typeof AudioContext
   }
 }
-// --- 修正ここまで ---
+
+// 時間をフォーマットするヘルパー関数 (例: 125秒 -> "2:05")
+const formatTime = (timeInSeconds: number) => {
+  const minutes = Math.floor(timeInSeconds / 60);
+  const seconds = timeInSeconds % 60;
+  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+};
 
 export default function RecordPage() {
   const [isRecording, setIsRecording] = useState(false);
@@ -20,6 +26,7 @@ export default function RecordPage() {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [title, setTitle] = useState('');
+   const [recordingTime, setRecordingTime] = useState(0); // 録音時間のstate
   const router = useRouter();
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -27,7 +34,8 @@ export default function RecordPage() {
   const mimeTypeRef = useRef<string>('');
   const audioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null); // 5分タイマーのID
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null); // 表示用タイマーのID
 
   const handleStartRecording = async () => {
     try {
@@ -109,6 +117,18 @@ export default function RecordPage() {
       setAudioUrl(null);
       setAudioBlob(null);
       setTitle('');
+
+       // --- 録音時間制限のロジック ---
+      setRecordingTime(0);
+      // 1秒ごとに表示を更新するタイマー
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime(prevTime => prevTime + 1);
+      }, 1000);
+      // 5分後に自動で停止するタイマー
+      recordingTimerRef.current = setTimeout(() => {
+        handleStopRecording();
+      }, 300000); // 5分 = 300,000ミリ秒
+
     } catch (err) {
       console.error('Error accessing microphone:', err);
       alert('Could not access the microphone. Please check permissions.');
@@ -116,7 +136,12 @@ export default function RecordPage() {
   };
 
   const handleStopRecording = () => {
-    if (mediaRecorderRef.current) {
+      // タイマーをクリア
+    if (recordingTimerRef.current) clearTimeout(recordingTimerRef.current);
+    if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
+    recordingTimerRef.current = null;
+    recordingIntervalRef.current = null;
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
       mediaRecorderRef.current.stop();
       streamRef.current?.getTracks().forEach(track => track.stop());
       audioContextRef.current?.close();
@@ -190,6 +215,12 @@ export default function RecordPage() {
             </button>
           )}
         </div>
+         {/* 録音中の経過時間を表示 */}
+        {isRecording && (
+          <p className="mb-4 text-lg text-white">
+            {formatTime(recordingTime)} / 5:00
+          </p>
+        )}
         {audioUrl && (
           <div className="space-y-4">
             <p className="text-gray-300">Recording Complete!</p>
