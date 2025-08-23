@@ -98,25 +98,31 @@ export default function TabBar({ isVisible }: { isVisible: boolean }) {
   const isNotificationsPage = pathname === '/notifications';
   const isProfilePage = currentUser ? pathname.startsWith(`/profile/${currentUser.id}`) : false;
 
-  return (
-    <nav className={`fixed bottom-0 left-0 right-0 z-10 border-t border-gray-700 bg-gray-800 transition-transform duration-300 ${isVisible ? 'translate-y-0' : 'translate-y-full'}`}>
-      <div className="mx-auto flex h-16 max-w-md items-center justify-between px-6">
+  // ...
+return (
+  <nav className={`fixed bottom-0 left-0 right-0 z-10 border-t border-gray-700 bg-gray-800 transition-transform duration-300 ${isVisible ? 'translate-y-0' : 'translate-y-full'}`}>
+    <div className="mx-auto flex h-16 max-w-md items-center justify-between px-6">
+      {/* 左側のアイコングループ */}
+      <div className="flex items-center gap-12">
         <Link href="/home" className={isHomePage ? 'text-white' : 'text-gray-400 hover:text-white'}>
           {isHomePage ? <HomeIconFilled /> : <HomeIcon />}
         </Link>
-        
-        <Link href="/search" className={`${isSearchPage ? 'text-white' : 'text-gray-400 hover:text-white'} mr-10`}>
-    {isSearchPage ? <SearchIconFilled /> : <SearchIcon />}
-  </Link>
+        <Link href="/search" className={isSearchPage ? 'text-white' : 'text-gray-400 hover:text-white'}>
+          {isSearchPage ? <SearchIconFilled /> : <SearchIcon />}
+        </Link>
+      </div>
 
-  <Link href="/notifications" className="relative text-gray-400 hover:text-white">
-  {isNotificationsPage ? <BellIconFilled /> : <BellIcon />}
-  {unreadNotifications > 0 && (
-    // ★ここを新しいクラスに置き換え
-    <span className="absolute -right-1 -top-1 block h-2 w-2 rounded-full bg-[#5151EB]"></span>
-  )}
+      {/* 中央の録音ボタンのためのスペーサー（削除） */}
+      {/* <div className="w-20"></div> */}
 
-</Link>
+      {/* 右側のアイコングループ */}
+      <div className="flex items-center gap-12">
+        <Link href="/notifications" className="relative text-gray-400 hover:text-white">
+          {isNotificationsPage ? <BellIconFilled /> : <BellIcon />}
+          {unreadNotifications > 0 && (
+            <span className="notification-badge"></span>
+          )}
+        </Link>
         {currentUser ? (
           <Link href={`/profile/${currentUser.id}`} className={isProfilePage ? 'text-white' : 'text-gray-400 hover:text-white'}>
             {isProfilePage ? <ProfileIconFilled /> : <ProfileIcon />}
@@ -127,13 +133,15 @@ export default function TabBar({ isVisible }: { isVisible: boolean }) {
           </button>
         )}
       </div>
-      
-      <button 
-        onClick={handleRecordClick}
-        className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-[35%] flex h-20 w-20 items-center justify-center rounded-full bg-[#5151EB] text-white shadow-lg"
-      >
-        <RecordIcon />
-      </button>
-    </nav>
-  );
+    </div>
+    
+    {/* 録音ボタンのコードは変更なし */}
+    <button 
+      onClick={handleRecordClick}
+      className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-[35%] flex h-20 w-20 items-center justify-center rounded-full bg-[#5151EB] text-white shadow-lg"
+    >
+      <RecordIcon />
+    </button>
+  </nav>
+);
 }
