@@ -38,9 +38,9 @@ export default function NotificationsPage() {
        const { data, error } = await supabase 
          .from('notifications') 
          .select(`*, profiles (username, avatar_url)`) 
-         .eq('notified_user_id', user.id) // <-- ここを修正
+         .eq('notified_id', user.id) 
          .order('created_at', { ascending: false });
-         
+
       if (error) {
         console.error('Error fetching notifications:', error);
       } else {
