@@ -58,7 +58,7 @@ export default function NotificationsPage() {
         <h1 className="font-unbounded text-center text-l font-bold text-white">Notifications</h1>
       </header>
 
-      <div className="mx-auto max-w-md p-4">
+      <div className="mx-auto max-w-md p-5">
         {loading ? (
           <p className="text-center text-gray-400">Loading notifications...</p>
         ) : notifications.length === 0 ? (
