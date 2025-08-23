@@ -38,16 +38,27 @@ export default function TabBar({ isVisible }: { isVisible: boolean }) {
 
   useEffect(() => {
     if (!currentUser) return;
+    
+    // ユーザーが通知ページにいる場合は、バッジを即座に消す
+    if (pathname === '/notifications') {
+      setUnreadNotifications(0);
+    }
+  
+    // 未読件数を取得する関数
     const fetchUnreadCount = async () => {
       const { count } = await supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('notified_id', currentUser.id)
         .eq('is_read', false);
-      setUnreadNotifications(count || 0);
+      
+      // ユーザーが通知ページにいない場合のみ、取得した未読件数をセットする
+      if (pathname !== '/notifications') {
+        setUnreadNotifications(count || 0);
+      }
     };
     fetchUnreadCount();
-
+  
     // リアルタイムで通知を監視
     const channel = supabase.channel('notification_count').on(
       'postgres_changes',
@@ -58,17 +69,21 @@ export default function TabBar({ isVisible }: { isVisible: boolean }) {
         filter: `notified_id=eq.${currentUser.id}`
       },
       (payload) => {
-        if (payload.eventType === 'INSERT') {
-          setUnreadNotifications(prev => prev + 1);
-        } else if (payload.eventType === 'UPDATE' && payload.new.is_read === true) {
-          setUnreadNotifications(prev => Math.max(0, prev - 1));
+        // ユーザーが通知ページにいない場合のみ、リアルタイムでバッジを更新
+        if (pathname !== '/notifications') {
+          if (payload.eventType === 'INSERT') {
+            setUnreadNotifications(prev => prev + 1);
+          } else if (payload.eventType === 'UPDATE' && payload.new.is_read === true) {
+            setUnreadNotifications(prev => Math.max(0, prev - 1));
+          }
         }
       }
     ).subscribe();
+
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUser]);
+  }, [currentUser, pathname]); // ★ 依存配列に pathname を追加
 
   const handleRecordClick = () => {
     if (currentUser) {
