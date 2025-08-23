@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase'; 
 import Link from 'next/link'; 
 import type { User } from '@supabase/supabase-js'; 
-import { markAllAsRead } from '@/lib/supabase'; // markAllAsReadをインポート
+import { markAllAsRead } from '@/lib/supabase'; 
 
 // 型定義 
 type Profile = { username: string; avatar_url: string | null; }; 
@@ -17,6 +17,7 @@ type Notification = {
   type: 'like' | 'comment' | 'follow'; 
   is_read: boolean; 
   profiles: Profile | null; 
+  posts: { title: string | null; } | null; // ★修正点B: この行を追加
 }; 
 
 export default function NotificationsPage() { 
@@ -38,7 +39,7 @@ export default function NotificationsPage() {
       // ログインユーザー宛の通知を取得
       const { data, error } = await supabase 
         .from('notifications') 
-        .select(`*, profiles!notifier_id(username, avatar_url)`)
+        .select(`*, profiles!notifier_id(username, avatar_url), posts!post_id(title)`) // ★修正点A: ここを修正
         .eq('notified_id', user.id) 
         .order('created_at', { ascending: false }); 
 
@@ -48,7 +49,6 @@ export default function NotificationsPage() {
         setNotifications(data as Notification[]); 
       } 
       
-      // ★★★ この行を追加 ★★★
       await markAllAsRead(user.id);
       
       setLoading(false); 
@@ -61,7 +61,6 @@ export default function NotificationsPage() {
     <main className="min-h-dvh bg-gray-900 pb-24"> 
       <header className="sticky top-0 z-10 flex items-center justify-center border-b border-gray-700 bg-gray-800 p-4">
   <h1 className="font-unbounded text-center text-l font-bold text-white">Notifications</h1>
-  
 </header>
 
       <div className="mx-auto max-w-md p-4"> 
@@ -85,9 +84,14 @@ export default function NotificationsPage() {
                     <Link href={`/profile/${notification.notifier_id}`} className="font-semibold hover:underline"> 
                       {notification.profiles?.username || 'Unknown User'} 
                     </Link> 
-                    {notification.type === 'like' && ' liked your post.'} 
-                    {notification.type === 'comment' && ' commented on your post.'} 
-                    {notification.type === 'follow' && ' started following you.'} 
+                    {notification.type === 'like' && (
+                       // ★修正点C: いいねの通知に投稿タイトルとリンクを追加
+                      <> liked your post: <Link href={`/post/${notification.post_id}`} className="font-semibold hover:underline">
+  {`"${notification.posts?.title || 'Untitled Post'}"`}
+</Link></>
+                    )}
+                    {notification.type === 'comment' && ' commented on your post.'}
+                    {notification.type === 'follow' && ' started following you.'}
                   </p> 
                 </div> 
               </div> 
