@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 
@@ -17,31 +17,15 @@ export default function SearchPage() {
   const [results, setResults] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // 👇 追加
-  const [currentUser, setCurrentUser] = useState<any>(null);
-
-  useEffect(() => {
-    // ログインしているユーザーを取得
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUser(user);
-    };
-    getUser();
-  }, []);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setCurrentUser(null);
-  };
-
   const handleSearch = async () => {
     if (!searchTerm.trim()) return;
     setLoading(true);
-
+    
+    // Supabaseのprofilesテーブルを検索
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .ilike('username', `%${searchTerm}%`);
+      .ilike('username', `%${searchTerm}%`); // ilikeで部分一致・大文字小文字無視の検索
 
     if (error) {
       console.error('Error searching users:', error);
@@ -50,32 +34,11 @@ export default function SearchPage() {
     }
     setLoading(false);
   };
+
   return (
     <main className="min-h-dvh bg-gray-900 pb-24">
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-700 bg-gray-800 p-4">
-        <div className="w-1/3"></div>
-
-        <h1 className="font-unbounded w-1/3 text-center text-3xl font-bold text-white">stew</h1>
-
-        <div className="flex w-1/3 justify-end">
-          {loading ? (
-            <div className="h-[30px] w-[76px]"></div>
-          ) : currentUser ? (
-            <button
-              onClick={handleLogout}
-              className="rounded-md bg-gray-700 px-4 py-1.5 text-sm font-semibold text-gray-200 hover:bg-gray-600"
-            >
-              Logout
-            </button>
-          ) : (
-            <Link
-              href="/"
-              className="rounded-md bg-[#D3FE3E] px-4 py-1.5 text-sm font-semibold text-black hover:bg-[#c2ef25]"
-            >
-              Login
-            </Link>
-          )}
-        </div>
+      <header className="sticky top-0 z-10 border-b border-gray-700 bg-gray-800 p-4">
+        <h1 className="font-unbounded text-center text-l font-bold text-white">search</h1>
       </header>
 
       <div className="p-4">

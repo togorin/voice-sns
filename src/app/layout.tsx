@@ -1,19 +1,34 @@
-import TabBar from "@/components/TabBar";
-import Header from "@/components/Header"; // 新しいヘッダーをインポート
+import type { Metadata } from "next";
+// Single_Dayの代わりにUnboundedをインポートします
+import { Inter, Unbounded } from "next/font/google";
+import "./globals.css";
+import ViewportHeightManager from "@/components/ViewportHeightManager"; // 新しいコンポーネントをインポート
 
-export default function TabsLayout({
+const inter = Inter({ subsets: ["latin"], variable: '--font-inter' });
+// Unboundedフォントを読み込みます
+const unbounded = Unbounded({ 
+  subsets: ["latin"], 
+  weight: ['400', '700', '900'], // 使用するフォントの太さを指定
+  variable: '--font-unbounded' 
+});
+
+export const metadata: Metadata = {
+  title: "stew",
+  description: "A voice-based social media.",
+};
+
+export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
-    <div className="relative flex min-h-dvh flex-col">
-      <Header /> {/* ヘッダーをここに追加 */}
-      <div className="flex-grow">
+    // htmlタグのclassNameに、新しいフォント変数を適用します
+    <html lang="en" className={`${inter.variable} ${unbounded.variable}`}>
+       <body>
+        <ViewportHeightManager /> {/* この行を追加 */}
         {children}
-      </div>
-      {/* isVisible={true} を追加して、常に表示するようにします */}
-      <TabBar isVisible={true} />
-    </div>
+      </body>
+    </html>
   );
 }

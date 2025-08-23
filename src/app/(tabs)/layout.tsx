@@ -1,3 +1,5 @@
+'use client';
+
 import TabBar from "@/components/TabBar";
 
 export default function TabsLayout({
@@ -10,7 +12,8 @@ export default function TabsLayout({
       <div className="flex-grow">
         {children}
       </div>
-      <TabBar />
+      {/* isVisibleプロパティをtrueに固定して、常にタブバーを表示します */}
+      <TabBar isVisible={true} />
     </div>
   );
 }

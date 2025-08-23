@@ -6,4 +6,3 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 // Supabaseクライアントを作成
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-

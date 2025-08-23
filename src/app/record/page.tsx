@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -12,7 +12,13 @@ declare global {
     webkitAudioContext: typeof AudioContext
   }
 }
-// --- 修正ここまで ---
+
+// 時間をフォーマットするヘルパー関数 (例: 125秒 -> "2:05")
+const formatTime = (timeInSeconds: number) => {
+  const minutes = Math.floor(timeInSeconds / 60);
+  const seconds = timeInSeconds % 60;
+  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+};
 
 export default function RecordPage() {
   const [isRecording, setIsRecording] = useState(false);
@@ -20,6 +26,7 @@ export default function RecordPage() {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [title, setTitle] = useState('');
+   const [recordingTime, setRecordingTime] = useState(0); // 録音時間のstate
   const router = useRouter();
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -27,7 +34,8 @@ export default function RecordPage() {
   const mimeTypeRef = useRef<string>('');
   const audioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null); // 5分タイマーのID
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null); // 表示用タイマーのID
 
   const handleStartRecording = async () => {
     try {
@@ -51,10 +59,30 @@ export default function RecordPage() {
       const gainNode = audioContext.createGain();
       gainNode.gain.setValueAtTime(2.0, audioContext.currentTime);
 
+ // --- ここからが新しいステレオ修正のコード ---
+
+      // チャンネルを分割するノードを作成
+      const splitter = audioContext.createChannelSplitter(2);
+      // チャンネルを結合するノードを作成
+
+      const merger = audioContext.createChannelMerger(2);
+
+      // マイク入力 -> 音量ツマミ -> 分割ノード と接続
+
+      source.connect(gainNode);
+      gainNode.connect(splitter);
+
+      // 左チャンネル(0)の出力を、結合ノードの左(0)と右(1)の両方の入力に接続
+      // これにより、モノラル音声が両耳から聞こえるようになります
+
+      splitter.connect(merger, 0, 0);
+      splitter.connect(merger, 0, 1);
+
+      // --- 修正ここまで ---
+
       const destination = audioContext.createMediaStreamDestination();
       
-      source.connect(gainNode);
-      gainNode.connect(destination);
+      merger.connect(destination); // 結合された音声を録音の出力先として設定
       
       const supportedMimeTypes = ['audio/mp4', 'audio/webm'];
       const supportedType = supportedMimeTypes.find(type => MediaRecorder.isTypeSupported(type));
@@ -89,6 +117,18 @@ export default function RecordPage() {
       setAudioUrl(null);
       setAudioBlob(null);
       setTitle('');
+
+       // --- 録音時間制限のロジック ---
+      setRecordingTime(0);
+      // 1秒ごとに表示を更新するタイマー
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime(prevTime => prevTime + 1);
+      }, 1000);
+      // 5分後に自動で停止するタイマー
+      recordingTimerRef.current = setTimeout(() => {
+        handleStopRecording();
+      }, 300000); // 5分 = 300,000ミリ秒
+
     } catch (err) {
       console.error('Error accessing microphone:', err);
       alert('Could not access the microphone. Please check permissions.');
@@ -96,7 +136,12 @@ export default function RecordPage() {
   };
 
   const handleStopRecording = () => {
-    if (mediaRecorderRef.current) {
+      // タイマーをクリア
+    if (recordingTimerRef.current) clearTimeout(recordingTimerRef.current);
+    if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
+    recordingTimerRef.current = null;
+    recordingIntervalRef.current = null;
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
       mediaRecorderRef.current.stop();
       streamRef.current?.getTracks().forEach(track => track.stop());
       audioContextRef.current?.close();
@@ -140,7 +185,14 @@ export default function RecordPage() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gray-900 p-4">
+    <main className="flex min-h-[calc(var(--vh,1vh)*100)]  flex-col items-center justify-center bg-gray-900 p-4">
+         {/* 戻るボタンを追加 */}
+      <Link href="/home" className="absolute top-4 left-4 text-[#D3FE3E] hover:text-[#c2ef25]">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </Link>
+
       <div className="w-full max-w-md rounded-lg bg-gray-800 p-8 text-center shadow-lg">
         <h1 className="text-xl font-bold text-white">Post a Voice Memo</h1>
         <div className="my-8">
@@ -150,6 +202,8 @@ export default function RecordPage() {
               className="rounded-full bg-[#5151EB] px-8 py-8 text-white shadow-lg transition-transform hover:scale-105 disabled:opacity-50"
               disabled={isUploading}
             >
+               {/* audioUrlの状態に応じてテキストを切り替えます */}
+
               {audioUrl ? 'Record again' : 'Start Recording'}
             </button>
           ) : (
@@ -161,6 +215,12 @@ export default function RecordPage() {
             </button>
           )}
         </div>
+         {/* 録音中の経過時間を表示 */}
+        {isRecording && (
+          <p className="mb-4 text-lg text-white">
+            {formatTime(recordingTime)} / 5:00
+          </p>
+        )}
         {audioUrl && (
           <div className="space-y-4">
             <p className="text-gray-300">Recording Complete!</p>
