@@ -38,7 +38,7 @@ export default function SearchPage() {
   return (
     <main className="min-h-dvh bg-gray-900 pb-24">
       <header className="sticky top-0 z-10 border-b border-gray-700 bg-gray-800 p-4">
-        <h1 className="font-unbounded text-center text-3xl font-bold text-white">stew</h1>
+        <h1 className="font-unbounded text-center text-l font-bold text-white">search</h1>
       </header>
 
       <div className="p-4">
