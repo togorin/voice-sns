@@ -103,7 +103,7 @@ return (
   <nav className={`fixed bottom-0 left-0 right-0 z-10 border-t border-gray-700 bg-gray-800 transition-transform duration-300 ${isVisible ? 'translate-y-0' : 'translate-y-full'}`}>
     <div className="mx-auto flex h-16 max-w-md items-center justify-between px-6">
       {/* 左側のアイコングループ */}
-      <div className="flex items-center gap-13">
+      <div className="flex items-center gap-12">
         <Link href="/home" className={isHomePage ? 'text-white' : 'text-gray-400 hover:text-white'}>
           {isHomePage ? <HomeIconFilled /> : <HomeIcon />}
         </Link>
@@ -116,7 +116,7 @@ return (
       {/* <div className="w-20"></div> */}
 
       {/* 右側のアイコングループ */}
-      <div className="flex items-center gap-13">
+      <div className="flex items-center gap-12">
         <Link href="/notifications" className="relative text-gray-400 hover:text-white">
           {isNotificationsPage ? <BellIconFilled /> : <BellIcon />}
           {unreadNotifications > 0 && (
