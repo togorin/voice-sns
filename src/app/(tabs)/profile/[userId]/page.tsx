@@ -250,7 +250,7 @@ export default function ProfilePage() {
 
         </div>
 
-        <h1 className="font-unbounded w-1/3 text-center text-3xl font-bold text-white">stew</h1>
+        <h1 className="font-unbounded w-1/3 text-center text-l font-bold text-white">profile</h1>
 
         <div className="flex w-1/3 justify-end">
 
