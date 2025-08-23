@@ -109,12 +109,14 @@ export default function TabBar({ isVisible }: { isVisible: boolean }) {
     {isSearchPage ? <SearchIconFilled /> : <SearchIcon />}
   </Link>
 
-  <Link href="/notifications" className={`relative ${isNotificationsPage ? 'text-white' : 'text-gray-400 hover:text-white'} ml-10`}>
-    {isNotificationsPage ? <BellIconFilled /> : <BellIcon />}
-    {unreadNotifications > 0 && (
-      <span className="absolute -right-1 -top-1 block h-3 w-3 rounded-full bg-red-500"></span>
-    )}
-  </Link>
+  <Link href="/notifications" className="relative text-gray-400 hover:text-white">
+  {isNotificationsPage ? <BellIconFilled /> : <BellIcon />}
+  {unreadNotifications > 0 && (
+    // ★ここを新しいクラスに置き換え
+    <span className="absolute -right-1 -top-1 block h-2 w-2 rounded-full bg-[#5151EB]"></span>
+  )}
+
+</Link>
         {currentUser ? (
           <Link href={`/profile/${currentUser.id}`} className={isProfilePage ? 'text-white' : 'text-gray-400 hover:text-white'}>
             {isProfilePage ? <ProfileIconFilled /> : <ProfileIcon />}
