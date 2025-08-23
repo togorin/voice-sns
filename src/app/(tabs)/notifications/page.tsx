@@ -23,34 +23,53 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUser(user);
+useEffect(() => {
+     const fetchNotifications = async () => {
+       console.log('1. fetchNotifications関数が開始されました。');
+       setLoading(true);
 
-      if (!user) {
-        setLoading(false);
-        return;
-      }
+       // ユーザー情報を取得
+       const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-      // ログインユーザー宛の通知を取得 
-       const { data, error } = await supabase 
-         .from('notifications') 
-         .select(`*, profiles (username, avatar_url)`) 
-         .eq('notified_id', user.id) 
+       if (userError) {
+         console.error('2. ユーザー情報の取得に失敗しました:', userError);
+         setLoading(false);
+         return;
+       }
+
+       if (!user) {
+         console.log('2. ユーザーがログインしていません。処理を中断します。');
+         setLoading(false);
+         return;
+       }
+
+       console.log('2. ユーザー情報を正常に取得しました:', user);
+       setCurrentUser(user);
+
+       console.log('3. 通知データの取得を開始します...');
+       // ログインユーザー宛の通知を取得
+       const { data, error } = await supabase
+         .from('notifications')
+         .select(`*, profiles (username, avatar_url)`)
+         .eq('notified_id', user.id)
          .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching notifications:', error);
-      } else {
-        setNotifications(data as Notification[]);
-      }
-      setLoading(false);
-    };
+       // 取得結果をコンソールに表示
+       if (error) {
+         console.error('4. 通知データの取得中にエラーが発生しました:', error);
+       } else {
+         console.log('4. 通知データを正常に取得しました:', data);
+         if (data.length === 0) {
+           console.warn('取得したデータが0件です。RLSポリシーまたはクエリ条件を確認してください。');
+         }
+         setNotifications(data as Notification[]);
+       }
+       setLoading(false);
+       console.log('5. fetchNotifications関数が終了しました。');
+     };
 
-    fetchNotifications();
-  }, []);
+     fetchNotifications();
+   }, []);
 
   return (
     <main className="min-h-dvh bg-gray-900 pb-24">
