@@ -34,13 +34,13 @@ export default function NotificationsPage() {
         return;
       }
 
-      // ログインユーザー宛の通知を取得
-      const { data, error } = await supabase
-        .from('notifications')
-        .select(`*, profiles (username, avatar_url)`)
-        .eq('notified_id', user.id)
-        .order('created_at', { ascending: false });
-
+      // ログインユーザー宛の通知を取得 
+       const { data, error } = await supabase 
+         .from('notifications') 
+         .select(`*, profiles (username, avatar_url)`) 
+         .eq('notified_user_id', user.id) // <-- ここを修正
+         .order('created_at', { ascending: false });
+         
       if (error) {
         console.error('Error fetching notifications:', error);
       } else {
