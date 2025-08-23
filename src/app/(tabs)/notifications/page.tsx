@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase'; 
 import Link from 'next/link'; 
 import type { User } from '@supabase/supabase-js'; 
+import { markAllAsRead } from '@/lib/supabase'; // markAllAsReadをインポート
 
 // 型定義 
 type Profile = { username: string; avatar_url: string | null; }; 
@@ -37,7 +38,7 @@ export default function NotificationsPage() {
       // ログインユーザー宛の通知を取得
       const { data, error } = await supabase 
         .from('notifications') 
-        .select(`*, profiles!notifier_id(username, avatar_url)`) // ここを修正
+        .select(`*, profiles!notifier_id(username, avatar_url)`)
         .eq('notified_id', user.id) 
         .order('created_at', { ascending: false }); 
 
@@ -46,6 +47,10 @@ export default function NotificationsPage() {
       } else { 
         setNotifications(data as Notification[]); 
       } 
+      
+      // ★★★ この行を追加 ★★★
+      await markAllAsRead(user.id);
+      
       setLoading(false); 
     }; 
 
