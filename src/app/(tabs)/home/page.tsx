@@ -125,48 +125,15 @@ export default function HomePage() {
   };
 
   const handleLike = async (postId: string) => {
-  if (!handleProtectedAction()) return;
-
-  // データベースに先にデータを挿入
-  const { error } = await supabase.from('likes').insert({ post_id: postId, user_id: currentUser!.id });
-
-  if (error) {
-    // エラーが発生した場合のみ、ユーザーに通知
-    console.error('Error liking post:', error);
-    alert('いいねに失敗しました。もう一度お試しください。');
-  } else {
-    // 成功した場合のみ、UIを更新
+    if (!handleProtectedAction()) return;
     setPosts(posts.map(post => post.id === postId ? { ...post, likes: [...post.likes, { user_id: currentUser!.id }] } : post));
-  }
-};
+    await supabase.from('likes').insert({ post_id: postId, user_id: currentUser!.id });
+  };
 
   const handleUnlike = async (postId: string) => {
-    // 1. ログインチェック
     if (!handleProtectedAction()) return;
-
-    // 2. データベースからいいねを削除
-    const { error } = await supabase
-      .from('likes')
-      .delete()
-      .eq('post_id', postId)
-      .eq('user_id', currentUser!.id);
-
-    // 3. エラーハンドリング
-    if (error) {
-      console.error('Error unliking post:', error.message);
-      alert('いいねの解除に失敗しました。もう一度お試しください。');
-    } else {
-      // 4. 成功した場合のみUIを更新（ローカルの状態からいいねを削除）
-      setPosts(posts.map(post => {
-        if (post.id === postId) {
-          return {
-            ...post,
-            likes: post.likes.filter(like => like.user_id !== currentUser!.id)
-          };
-        }
-        return post;
-      }));
-    }
+    setPosts(posts.map(post => post.id === postId ? { ...post, likes: post.likes.filter(like => like.user_id !== currentUser!.id) } : post));
+    await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', currentUser!.id);
   };
 
   const handleDelete = async (post: Post) => {
