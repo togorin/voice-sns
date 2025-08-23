@@ -30,12 +30,3 @@ body {
   font-family: var(--font-unbounded);
 }
 
-.notification-badge {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 8px; /* 好みのサイズに調整 */
-  height: 8px; /* 好みのサイズに調整 */
-  background-color: #5151EB;
-  border-radius: 50%;
-}
