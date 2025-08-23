@@ -38,16 +38,27 @@ export default function TabBar({ isVisible }: { isVisible: boolean }) {
 
   useEffect(() => {
     if (!currentUser) return;
+    
+    // ユーザーが通知ページにいる場合は、バッジを即座に消す
+    if (pathname === '/notifications') {
+      setUnreadNotifications(0);
+    }
+  
+    // 未読件数を取得する関数
     const fetchUnreadCount = async () => {
       const { count } = await supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('notified_id', currentUser.id)
         .eq('is_read', false);
-      setUnreadNotifications(count || 0);
+      
+      // ユーザーが通知ページにいない場合のみ、取得した未読件数をセットする
+      if (pathname !== '/notifications') {
+        setUnreadNotifications(count || 0);
+      }
     };
     fetchUnreadCount();
-
+  
     // リアルタイムで通知を監視
     const channel = supabase.channel('notification_count').on(
       'postgres_changes',
@@ -58,17 +69,21 @@ export default function TabBar({ isVisible }: { isVisible: boolean }) {
         filter: `notified_id=eq.${currentUser.id}`
       },
       (payload) => {
-        if (payload.eventType === 'INSERT') {
-          setUnreadNotifications(prev => prev + 1);
-        } else if (payload.eventType === 'UPDATE' && payload.new.is_read === true) {
-          setUnreadNotifications(prev => Math.max(0, prev - 1));
+        // ユーザーが通知ページにいない場合のみ、リアルタイムでバッジを更新
+        if (pathname !== '/notifications') {
+          if (payload.eventType === 'INSERT') {
+            setUnreadNotifications(prev => prev + 1);
+          } else if (payload.eventType === 'UPDATE' && payload.new.is_read === true) {
+            setUnreadNotifications(prev => Math.max(0, prev - 1));
+          }
         }
       }
     ).subscribe();
+
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUser]);
+  }, [currentUser, pathname]); // ★ 依存配列に pathname を追加
 
   const handleRecordClick = () => {
     if (currentUser) {
@@ -85,21 +100,26 @@ export default function TabBar({ isVisible }: { isVisible: boolean }) {
 
   return (
     <nav className={`fixed bottom-0 left-0 right-0 z-10 border-t border-gray-700 bg-gray-800 transition-transform duration-300 ${isVisible ? 'translate-y-0' : 'translate-y-full'}`}>
-      <div className="mx-auto flex h-16 max-w-md items-center justify-between px-6">
+      <div className="mx-auto flex h-16 max-w-md items-center justify-between px-4">
         <Link href="/home" className={isHomePage ? 'text-white' : 'text-gray-400 hover:text-white'}>
           {isHomePage ? <HomeIconFilled /> : <HomeIcon />}
         </Link>
         
-        <Link href="/search" className={`${isSearchPage ? 'text-white' : 'text-gray-400 hover:text-white'} mr-10`}>
-    {isSearchPage ? <SearchIconFilled /> : <SearchIcon />}
-  </Link>
+        <Link href="/search" className={isSearchPage ? 'text-white' : 'text-gray-400 hover:text-white'}>
+          {isSearchPage ? <SearchIconFilled /> : <SearchIcon />}
+        </Link>
 
-  <Link href="/notifications" className={`relative ${isNotificationsPage ? 'text-white' : 'text-gray-400 hover:text-white'} ml-10`}>
-    {isNotificationsPage ? <BellIconFilled /> : <BellIcon />}
-    {unreadNotifications > 0 && (
-      <span className="absolute -right-1 -top-1 block h-3 w-3 rounded-full bg-red-500"></span>
-    )}
-  </Link>
+          {/* このdivが、中央の録音ボタンのためのスペースを作ります */}
+
+        <div className="w-20"></div>
+
+         <Link href="/notifications" className="relative text-gray-400 hover:text-white">
+  {isNotificationsPage ? <BellIconFilled /> : <BellIcon />}
+  {unreadNotifications > 0 && (
+    <span className="notification-badge"></span>
+  )}
+</Link>
+
         {currentUser ? (
           <Link href={`/profile/${currentUser.id}`} className={isProfilePage ? 'text-white' : 'text-gray-400 hover:text-white'}>
             {isProfilePage ? <ProfileIconFilled /> : <ProfileIcon />}
