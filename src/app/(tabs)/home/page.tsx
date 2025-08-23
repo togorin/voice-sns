@@ -173,7 +173,14 @@ export default function HomePage() {
 
   return (
     <main className="bg-gray-900 pb-24">
-
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-700 bg-gray-800 p-4">
+        <div className="w-1/3"></div>
+        <h1 className="font-unbounded w-1/3 text-center text-3xl font-bold text-white">stew</h1>
+        <div className="flex w-1/3 justify-end">
+           {loading ? <div className="h-[30px] w-[76px]"></div> : currentUser ? <button onClick={handleLogout} className="rounded-md bg-gray-700 px-4 py-1.5 text-sm font-semibold text-gray-200 hover:bg-gray-600">Logout</button> : <Link href="/" className="rounded-md bg-[#D3FE3E] px-4 py-1.5 text-sm font-semibold text-black hover:bg-[#c2ef25]">Login</Link>}
+      
+        </div>
+      </header>
       <div className="p-4">
         {loading ? <p className="text-center text-gray-400">Loading posts...</p> : 
         posts.length === 0 ? <p className="text-center text-gray-400">No posts to show. Start by recording your first voice memo!</p> : 
