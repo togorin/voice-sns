@@ -85,21 +85,26 @@ export default function TabBar({ isVisible }: { isVisible: boolean }) {
 
   return (
     <nav className={`fixed bottom-0 left-0 right-0 z-10 border-t border-gray-700 bg-gray-800 transition-transform duration-300 ${isVisible ? 'translate-y-0' : 'translate-y-full'}`}>
-      <div className="mx-auto flex h-16 max-w-md items-center justify-between px-6">
+      <div className="mx-auto flex h-16 max-w-md items-center justify-between px-4">
         <Link href="/home" className={isHomePage ? 'text-white' : 'text-gray-400 hover:text-white'}>
           {isHomePage ? <HomeIconFilled /> : <HomeIcon />}
         </Link>
         
-        <Link href="/search" className={`${isSearchPage ? 'text-white' : 'text-gray-400 hover:text-white'} mr-10`}>
-    {isSearchPage ? <SearchIconFilled /> : <SearchIcon />}
-  </Link>
+        <Link href="/search" className={isSearchPage ? 'text-white' : 'text-gray-400 hover:text-white'}>
+          {isSearchPage ? <SearchIconFilled /> : <SearchIcon />}
+        </Link>
 
-  <Link href="/notifications" className={`relative ${isNotificationsPage ? 'text-white' : 'text-gray-400 hover:text-white'} ml-10`}>
-    {isNotificationsPage ? <BellIconFilled /> : <BellIcon />}
-    {unreadNotifications > 0 && (
-      <span className="absolute -right-1 -top-1 block h-3 w-3 rounded-full bg-red-500"></span>
-    )}
-  </Link>
+          {/* このdivが、中央の録音ボタンのためのスペースを作ります */}
+
+        <div className="w-20"></div>
+
+         <Link href="/notifications" className="relative text-gray-400 hover:text-white">
+  {isNotificationsPage ? <BellIconFilled /> : <BellIcon />}
+  {unreadNotifications > 0 && (
+    <span className="notification-badge"></span>
+  )}
+</Link>
+
         {currentUser ? (
           <Link href={`/profile/${currentUser.id}`} className={isProfilePage ? 'text-white' : 'text-gray-400 hover:text-white'}>
             {isProfilePage ? <ProfileIconFilled /> : <ProfileIcon />}
