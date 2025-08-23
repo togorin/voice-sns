@@ -90,17 +90,16 @@ export default function TabBar({ isVisible }: { isVisible: boolean }) {
           {isHomePage ? <HomeIconFilled /> : <HomeIcon />}
         </Link>
         
-        <Link href="/search" className={isSearchPage ? 'text-white' : 'text-gray-400 hover:text-white'}>
-          {isSearchPage ? <SearchIconFilled /> : <SearchIcon />}
-        </Link>
+        <Link href="/search" className={`${isSearchPage ? 'text-white' : 'text-gray-400 hover:text-white'} mr-10`}>
+    {isSearchPage ? <SearchIconFilled /> : <SearchIcon />}
+  </Link>
 
-        <Link href="/notifications" className="relative text-gray-400 hover:text-white">
-          {isNotificationsPage ? <BellIconFilled /> : <BellIcon />}
-          {unreadNotifications > 0 && (
-            <span className="absolute -right-1 -top-1 block h-3 w-3 rounded-full bg-red-500"></span>
-          )}
-        </Link>
-
+  <Link href="/notifications" className={`relative ${isNotificationsPage ? 'text-white' : 'text-gray-400 hover:text-white'} ml-10`}>
+    {isNotificationsPage ? <BellIconFilled /> : <BellIcon />}
+    {unreadNotifications > 0 && (
+      <span className="absolute -right-1 -top-1 block h-3 w-3 rounded-full bg-red-500"></span>
+    )}
+  </Link>
         {currentUser ? (
           <Link href={`/profile/${currentUser.id}`} className={isProfilePage ? 'text-white' : 'text-gray-400 hover:text-white'}>
             {isProfilePage ? <ProfileIconFilled /> : <ProfileIcon />}
