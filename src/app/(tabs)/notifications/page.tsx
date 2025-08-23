@@ -86,7 +86,9 @@ export default function NotificationsPage() {
                     </Link> 
                     {notification.type === 'like' && (
                        // ★修正点C: いいねの通知に投稿タイトルとリンクを追加
-                      <> liked your post: <Link href={`/post/${notification.post_id}`} className="font-semibold hover:underline">"{notification.posts?.title || 'Untitled Post'}"</Link></>
+                      <> liked your post: <Link href={`/post/${notification.post_id}`} className="font-semibold hover:underline">
+  {`"${notification.posts?.title || 'Untitled Post'}"`}
+</Link></>
                     )}
                     {notification.type === 'comment' && ' commented on your post.'}
                     {notification.type === 'follow' && ' started following you.'}
