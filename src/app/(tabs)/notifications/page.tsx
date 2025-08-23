@@ -60,7 +60,7 @@ export default function NotificationsPage() {
   return ( 
     <main className="min-h-dvh bg-gray-900 pb-24"> 
       <header className="sticky top-0 z-10 flex items-center justify-center border-b border-gray-700 bg-gray-800 p-4">
-  <h1 className="font-unbounded text-center text-l font-bold text-white">Notifications</h1>
+  <h1 className="font-unbounded text-center text-l font-bold text-white">notifications</h1>
 </header>
 
       <div className="mx-auto max-w-md p-4"> 
