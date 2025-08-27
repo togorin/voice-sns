@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // useEffectを追加
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -11,6 +11,27 @@ export default function AuthPage() {
   const [username, setUsername] = useState('');
   const [isLoginView, setIsLoginView] = useState(true);
   const router = useRouter();
+
+  // --- ここからが新しいコード ---
+
+  // 認証状態の変化を監視し、サインインしたらホームにリダイレクトする
+
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_IN') {
+          router.push('/home');
+        }
+      }
+    );
+
+    // コンポーネントが不要になったら、監視を解除します
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [router]);
+
+  // --- 修正ここまで ---
 
   const handleSignUp = async () => {
     if (!username) {
