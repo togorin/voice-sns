@@ -1,20 +1,45 @@
 import type { Metadata } from "next";
-// Single_Dayの代わりにUnboundedをインポートします
 import { Inter, Unbounded } from "next/font/google";
 import "./globals.css";
-import ViewportHeightManager from "@/components/ViewportHeightManager"; // 新しいコンポーネントをインポート
+import ViewportHeightManager from "@/components/ViewportHeightManager";
 
 const inter = Inter({ subsets: ["latin"], variable: '--font-inter' });
-// Unboundedフォントを読み込みます
 const unbounded = Unbounded({ 
   subsets: ["latin"], 
-  weight: ['400', '700', '900'], // 使用するフォントの太さを指定
+  weight: ['400', '700', '900'],
   variable: '--font-unbounded' 
 });
 
+// metadataオブジェクトを更新します
 export const metadata: Metadata = {
   title: "stew",
-  description: "A voice-based social media.",
+  description: "Speak your mind.",
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
+  // OGP設定を追加します
+  openGraph: {
+    title: 'stew',
+    description: 'Speak your mind.',
+    url: 'https://stew-livid.vercel.app', // あなたのアプリの公開URLに置き換えてください
+    siteName: 'stew',
+    images: [
+      {
+        url: '/opengraph-image.png', // publicフォルダからの相対パス
+        width: 1200,
+        height: 630,
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'stew',
+    description: 'Speak your mind.',
+    images: ['/opengraph-image.png'], // publicフォルダからの相対パス
+  },
 };
 
 export default function RootLayout({
@@ -23,10 +48,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // htmlタグのclassNameに、新しいフォント変数を適用します
     <html lang="en" className={`${inter.variable} ${unbounded.variable}`}>
-       <body>
-        <ViewportHeightManager /> {/* この行を追加 */}
+      <body>
+        <ViewportHeightManager />
         {children}
       </body>
     </html>
