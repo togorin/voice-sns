@@ -3,16 +3,17 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js"; // ← Supabaseの型をimport
 
 type AuthContextType = {
-  user: any;
+  user: User | null;
   handleProtectedAction: () => boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     // 初期ユーザー取得
