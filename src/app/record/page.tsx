@@ -229,7 +229,7 @@ export default function RecordPage() {
               placeholder="Add a title... (optional)"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              maxLength={20}
+              maxLength={30}
               className="w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
             />
             <audio 
