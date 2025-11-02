@@ -112,7 +112,7 @@ export default function RecordPage() {
         audioChunksRef.current = [];
       };
       
-      mediaRecorder.start();
+      mediaRecorder.start(1000); // 1秒ごとにデータを吐き出す
       setIsRecording(true);
       setAudioUrl(null);
       setAudioBlob(null);
